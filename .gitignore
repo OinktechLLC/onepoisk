@@ -1,28 +1,28 @@
-# Examples
-
-## Project with artifacts:
-```
 # Compiled and build artifacts
 *.pyc
 __pycache__/
 *.o
 *.obj
-dist/
-build/
-target/
+*.class
+*.exe
+*.dll
+*.so
+*.a
+*.out
 
 # Dependencies
-.venv/
+node_modules/
 venv/
+.venv/
 .env
 .env.local
 .env.*
-node_modules/
 
 # Logs and temp files
 *.log
 *.tmp
 *.swp
+*.swo
 
 # Editors
 .vscode/
@@ -37,26 +37,12 @@ coverage/
 htmlcov/
 .coverage
 
-# Gradle
+# Build directories
+dist/
+build/
+target/
 .gradle/
 
-# MyPy
+# Python specific
 .mypy_cache/
-
-# Pytest
 .pytest_cache/
-```
-
-## Minimal changes:
-```
-# Dependencies
-node_modules/
-
-# Environment
-.env
-.env.*
-
-# Editors
-.vscode/
-.idea/
-```
