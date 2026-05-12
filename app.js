@@ -163,8 +163,21 @@ function initSearch() {
     });
     
     luckyBtn.addEventListener('click', () => {
-        if (searchInput.value.trim()) {
-            window.open(`https://www.google.com/search?btnI=1&q=${encodeURIComponent(searchInput.value)}`, '_blank');
+        const query = searchInput.value.trim();
+        if (query) {
+            // Переход на SearchEngine.html с параметром поиска
+            window.location.href = `SearchEngine.html?q=${encodeURIComponent(query)}`;
+        } else {
+            // Если запрос пустой - случайный сайт из закладок или сервисов
+            const bookmarks = JSON.parse(localStorage.getItem('onepoisk_bookmarks') || '[]');
+            if (bookmarks.length > 0) {
+                const random = bookmarks[Math.floor(Math.random() * bookmarks.length)];
+                window.open(random.url, '_blank');
+            } else {
+                // Случайный сервис из defaultServices
+                const randomService = defaultServices[Math.floor(Math.random() * defaultServices.length)];
+                window.open(randomService.url, '_blank');
+            }
         }
     });
 }
