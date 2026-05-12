@@ -1,4 +1,4 @@
---- app.js (原始)
+--- OnePoisk/app.js (原始)
 // OnePoisk Application
 // Main JavaScript file
 
@@ -18,54 +18,23 @@ document.addEventListener('DOMContentLoaded', () => {
 // ============================================
 // ГЕОБЛОКИРОВКА
 // ============================================
-const CIS_COUNTRIES = ['RU', 'BY', 'KZ', 'AM', 'AZ', 'KG', 'MD', 'TJ', 'TM', 'UZ', 'UA', 'EE', 'LV', 'LT', 'GE'];
+const CIS_COUNTRIES = ['RU', 'BY', 'KZ', 'AM', 'AZ', 'KG', 'MD', 'TJ', 'TM', 'UZ'];
 
 async function initGeoCheck() {
     try {
-        // Пробуем несколько API для определения геолокации
-        const apis = [
-            'https://ipapi.co/json/',
-            'https://ipwho.is/',
-            'https://ip-api.com/json/'
-        ];
-
-        let countryCode = null;
-
-        for (const apiUrl of apis) {
-            try {
-                const response = await fetch(apiUrl, { timeout: 5000 });
-                const data = await response.json();
-
-                // Разные API возвращают код страны в разных полях
-                countryCode = data.country_code || data.countryCode || null;
-
-                if (countryCode) {
-                    console.log(`Geo check: страна определена как ${countryCode} через ${apiUrl}`);
-                    break;
-                }
-            } catch (apiError) {
-                console.warn(`API ${apiUrl} не ответил:`, apiError);
-                continue;
-            }
-        }
-
-        // Если не удалось определить страну - разрешаем доступ (для РФ и СНГ)
-        if (!countryCode) {
-            console.log('Geo check: не удалось определить страну, разрешаем доступ');
-            return;
-        }
+        const response = await fetch('https://ipapi.co/json/');
+        const data = await response.json();
+        const countryCode = data.country_code;
 
         if (!CIS_COUNTRIES.includes(countryCode)) {
-            console.log(`Geo check: страна ${countryCode} не в списке разрешённых`);
             document.getElementById('geo-block').classList.remove('hidden');
             document.getElementById('main-content').classList.add('hidden');
-        } else {
-            console.log(`Geo check: страна ${countryCode} разрешена`);
         }
     } catch (error) {
         console.error('Geo check error:', error);
-        // При любой ошибке - разрешаем доступ (пользователи из РФ/СНГ не должны блокироваться)
-        console.log('Geo check: ошибка проверки, разрешаем доступ по умолчанию');
+        // При ошибке показываем блокировку
+        document.getElementById('geo-block').classList.remove('hidden');
+        document.getElementById('main-content').classList.add('hidden');
     }
 }
 
@@ -1151,7 +1120,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initSearchStats();
 });
 
-+++ app.js (修改后)
++++ OnePoisk/app.js (修改后)
 // OnePoisk Application
 // Main JavaScript file
 
@@ -1171,54 +1140,23 @@ document.addEventListener('DOMContentLoaded', () => {
 // ============================================
 // ГЕОБЛОКИРОВКА
 // ============================================
-const CIS_COUNTRIES = ['RU', 'BY', 'KZ', 'AM', 'AZ', 'KG', 'MD', 'TJ', 'TM', 'UZ', 'UA', 'EE', 'LV', 'LT', 'GE'];
+const CIS_COUNTRIES = ['RU', 'BY', 'KZ', 'AM', 'AZ', 'KG', 'MD', 'TJ', 'TM', 'UZ'];
 
 async function initGeoCheck() {
     try {
-        // Пробуем несколько API для определения геолокации
-        const apis = [
-            'https://ipapi.co/json/',
-            'https://ipwho.is/',
-            'https://ip-api.com/json/'
-        ];
-
-        let countryCode = null;
-
-        for (const apiUrl of apis) {
-            try {
-                const response = await fetch(apiUrl, { timeout: 5000 });
-                const data = await response.json();
-
-                // Разные API возвращают код страны в разных полях
-                countryCode = data.country_code || data.countryCode || null;
-
-                if (countryCode) {
-                    console.log(`Geo check: страна определена как ${countryCode} через ${apiUrl}`);
-                    break;
-                }
-            } catch (apiError) {
-                console.warn(`API ${apiUrl} не ответил:`, apiError);
-                continue;
-            }
-        }
-
-        // Если не удалось определить страну - разрешаем доступ (для РФ и СНГ)
-        if (!countryCode) {
-            console.log('Geo check: не удалось определить страну, разрешаем доступ');
-            return;
-        }
+        const response = await fetch('https://ipapi.co/json/');
+        const data = await response.json();
+        const countryCode = data.country_code;
 
         if (!CIS_COUNTRIES.includes(countryCode)) {
-            console.log(`Geo check: страна ${countryCode} не в списке разрешённых`);
             document.getElementById('geo-block').classList.remove('hidden');
             document.getElementById('main-content').classList.add('hidden');
-        } else {
-            console.log(`Geo check: страна ${countryCode} разрешена`);
         }
     } catch (error) {
         console.error('Geo check error:', error);
-        // При любой ошибке - разрешаем доступ (пользователи из РФ/СНГ не должны блокироваться)
-        console.log('Geo check: ошибка проверки, разрешаем доступ по умолчанию');
+        // При ошибке показываем блокировку
+        document.getElementById('geo-block').classList.remove('hidden');
+        document.getElementById('main-content').classList.add('hidden');
     }
 }
 
@@ -1297,9 +1235,21 @@ function initSearch() {
     const clearBtn = document.getElementById('clear-btn');
     const luckyBtn = document.getElementById('lucky-btn');
 
-    searchBtn.addEventListener('click', performSearch);
+    searchBtn.addEventListener('click', () => {
+        const query = searchInput.value.trim();
+        if (query) {
+            // Переход на SearchEngine.html с поисковым запросом
+            window.location.href = `SearchEngine.html?q=${encodeURIComponent(query)}`;
+        }
+    });
     searchInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') performSearch();
+        if (e.key === 'Enter') {
+            const query = searchInput.value.trim();
+            if (query) {
+                // Переход на SearchEngine.html с поисковым запросом
+                window.location.href = `SearchEngine.html?q=${encodeURIComponent(query)}`;
+            }
+        }
     });
 
     searchInput.addEventListener('input', () => {
@@ -1319,19 +1269,11 @@ function initSearch() {
     luckyBtn.addEventListener('click', () => {
         const query = searchInput.value.trim();
         if (query) {
-            // Переход на SearchEngine.html с параметром поиска
+            // Переход на SearchEngine.html с поисковым запросом
             window.location.href = `SearchEngine.html?q=${encodeURIComponent(query)}`;
         } else {
-            // Если запрос пустой - случайный сайт из закладок или сервисов
-            const bookmarks = JSON.parse(localStorage.getItem('onepoisk_bookmarks') || '[]');
-            if (bookmarks.length > 0) {
-                const random = bookmarks[Math.floor(Math.random() * bookmarks.length)];
-                window.open(random.url, '_blank');
-            } else {
-                // Случайный сервис из defaultServices
-                const randomService = defaultServices[Math.floor(Math.random() * defaultServices.length)];
-                window.open(randomService.url, '_blank');
-            }
+            // Если запрос пустой - просто переход на SearchEngine.html
+            window.location.href = 'SearchEngine.html';
         }
     });
 }
@@ -1512,7 +1454,8 @@ function initVoiceSearch() {
         const transcript = event.results[0][0].transcript;
         document.getElementById('search-input').value = transcript;
         document.getElementById('clear-btn').classList.remove('hidden');
-        performSearch();
+        // Переход на SearchEngine.html с голосовым запросом
+        window.location.href = `SearchEngine.html?q=${encodeURIComponent(transcript)}`;
     };
 
     recognition.onerror = (event) => {
@@ -1589,7 +1532,7 @@ function initOinkID() {
 function loadCurrentUser() {
     const saved = localStorage.getItem('oink_current_user');
     if (saved) {
-        currentUser = JSON.parse(saved);
+        currentUser = saved; // Сохраняем как строку, не JSON
         updateProfileUI();
     }
 }
@@ -1970,6 +1913,14 @@ function initPages() {
             }
         });
     });
+
+    // Дополнительная инициализация для FAQ после загрузки DOM
+    setTimeout(() => {
+        const faqLink = document.querySelector('[data-page="faq"]');
+        if (faqLink) {
+            faqLink.style.cursor = 'pointer';
+        }
+    }, 100);
 }
 
 function openPage(pageName) {
@@ -2047,7 +1998,6 @@ async function initWeatherWidget() {
 
         if (geoData.results && geoData.results[0]) {
             const { latitude, longitude, name } = geoData.results[0];
-
             const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`);
             const weatherData = await weatherResponse.json();
 
@@ -2232,7 +2182,8 @@ function initAliceAssistant() {
             document.getElementById('search-input').value = transcript;
 
             if (event.results[0].isFinal) {
-                performSearch(transcript);
+                // Переход на SearchEngine.html с голосовым запросом
+                window.location.href = `SearchEngine.html?q=${encodeURIComponent(transcript)}`;
             }
         };
 
