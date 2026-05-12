@@ -112,9 +112,21 @@ function initSearch() {
     const clearBtn = document.getElementById('clear-btn');
     const luckyBtn = document.getElementById('lucky-btn');
     
-    searchBtn.addEventListener('click', performSearch);
+    searchBtn.addEventListener('click', () => {
+        const query = searchInput.value.trim();
+        if (query) {
+            // Переход на SearchEngine.html с поисковым запросом
+            window.location.href = `SearchEngine.html?q=${encodeURIComponent(query)}`;
+        }
+    });
     searchInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') performSearch();
+        if (e.key === 'Enter') {
+            const query = searchInput.value.trim();
+            if (query) {
+                // Переход на SearchEngine.html с поисковым запросом
+                window.location.href = `SearchEngine.html?q=${encodeURIComponent(query)}`;
+            }
+        }
     });
     
     searchInput.addEventListener('input', () => {
@@ -132,8 +144,13 @@ function initSearch() {
     });
     
     luckyBtn.addEventListener('click', () => {
-        if (searchInput.value.trim()) {
-            window.open(`https://www.google.com/search?btnI=1&q=${encodeURIComponent(searchInput.value)}`, '_blank');
+        const query = searchInput.value.trim();
+        if (query) {
+            // Переход на SearchEngine.html с поисковым запросом
+            window.location.href = `SearchEngine.html?q=${encodeURIComponent(query)}`;
+        } else {
+            // Если запрос пустой - просто переход на SearchEngine.html
+            window.location.href = 'SearchEngine.html';
         }
     });
 }
@@ -314,7 +331,8 @@ function initVoiceSearch() {
         const transcript = event.results[0][0].transcript;
         document.getElementById('search-input').value = transcript;
         document.getElementById('clear-btn').classList.remove('hidden');
-        performSearch();
+        // Переход на SearchEngine.html с голосовым запросом
+        window.location.href = `SearchEngine.html?q=${encodeURIComponent(transcript)}`;
     };
     
     recognition.onerror = (event) => {
@@ -391,7 +409,7 @@ function initOinkID() {
 function loadCurrentUser() {
     const saved = localStorage.getItem('oink_current_user');
     if (saved) {
-        currentUser = JSON.parse(saved);
+        currentUser = saved; // Сохраняем как строку, не JSON
         updateProfileUI();
     }
 }
@@ -772,6 +790,14 @@ function initPages() {
             }
         });
     });
+    
+    // Дополнительная инициализация для FAQ после загрузки DOM
+    setTimeout(() => {
+        const faqLink = document.querySelector('[data-page="faq"]');
+        if (faqLink) {
+            faqLink.style.cursor = 'pointer';
+        }
+    }, 100);
 }
 
 function openPage(pageName) {
@@ -1034,7 +1060,8 @@ function initAliceAssistant() {
             document.getElementById('search-input').value = transcript;
             
             if (event.results[0].isFinal) {
-                performSearch(transcript);
+                // Переход на SearchEngine.html с голосовым запросом
+                window.location.href = `SearchEngine.html?q=${encodeURIComponent(transcript)}`;
             }
         };
         
