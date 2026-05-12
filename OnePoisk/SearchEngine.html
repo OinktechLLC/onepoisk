@@ -458,6 +458,10 @@
     </script>
 
     <script>
+        // Проверка URL параметров для автоматического поиска
+        const urlParams = new URLSearchParams(window.location.search);
+        const autoQuery = urlParams.get('q');
+        
         const searchInput = document.getElementById('search-input');
         const searchButton = document.getElementById('search-button');
         const searchResults = document.getElementById('search-results');
@@ -465,15 +469,15 @@
         const themeToggle = document.getElementById('theme-toggle');
         const body = document.body;
 
-        const CSE_ID = 'f037a62d8533a420b'; // Замените на свой ID CSE
-        const WIKIPEDIA_API_ENDPOINT = 'https://neolurk.org/w/api.php?action=query&format=json&origin=*&prop=extracts&exintro&explaintext&redirects=1&titles='; // API endpoint для русской Википедии
+        const CSE_ID = 'f037a62d8533a420b';
+        const WIKIPEDIA_API_ENDPOINT = 'https://ru.wikipedia.org/w/api.php?action=query&format=json&origin=*&prop=extracts&exintro&explaintext&redirects=1&titles=';
 
         // Функция для переключения темы
         function toggleTheme() {
             body.classList.toggle('dark-theme');
             const isDarkTheme = body.classList.contains('dark-theme');
             themeToggle.textContent = isDarkTheme ? 'Светлая тема' : 'Тёмная тема';
-            localStorage.setItem('theme', isDarkTheme ? 'dark' : 'light'); // Сохраняем тему в localStorage
+            localStorage.setItem('theme', isDarkTheme ? 'dark' : 'light');
         }
 
         // Проверяем сохраненную тему при загрузке страницы
@@ -493,11 +497,17 @@
             }
         });
 
+        // Автоматический поиск если есть параметр q в URL
+        if (autoQuery) {
+            searchInput.value = autoQuery;
+            performSearch();
+        }
+
         async function performSearch() {
             const query = searchInput.value;
             if (query) {
                 searchResults.innerHTML = '';
-                wikipediaResultDiv.innerHTML = 'Загрузка...';
+                wikipediaResultDiv.innerHTML = '<p>Загрузка...</p>';
                 await getWikipediaSummary(query);
                 searchGoogle(query);
                 searchGoogleImages(query);
@@ -659,17 +669,17 @@
                 const data = await response.json();
 
                 const pages = data.query.pages;
-                const pageId = Object.keys(pages)[0]; // Получаем ID первой страницы
+                const pageId = Object.keys(pages)[0];
 
                 if (pageId !== '-1' && pages[pageId]) {
                     const extract = pages[pageId].extract;
-                    wikipediaResultDiv.innerHTML = `<h2>${pages[pageId].title}</h2><p>${extract}</p><a href="https://ru.ruwiki.ru/wiki${encodeURIComponent(query)}" target="_blank">Подробнее в Рувики</a>`;
+                    wikipediaResultDiv.innerHTML = `<h2>${pages[pageId].title}</h2><p>${extract}</p><a href="https://ru.wikipedia.org/wiki/${encodeURIComponent(pages[pageId].title)}" target="_blank">Подробнее в Википедии</a>`;
                 } else {
-                    wikipediaResultDiv.innerHTML = 'Извините, вы немного не то ищете:( Статья об компании или человеке не найдена. Попробуйте! Выложить статью в neolurk.org как выложите здесь при вводе будет ваша статья Удачи:) (Это свободная ВикиПедия)';
+                    wikipediaResultDiv.innerHTML = '';
                 }
             } catch (error) {
                 console.error('Ошибка при запросе', error);
-                wikipediaResultDiv.innerHTML = 'Ошибка при загрузке.';
+                wikipediaResultDiv.innerHTML = '';
             }
         }
     </script>
