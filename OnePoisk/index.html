@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OnePoisk — найдётся всё!</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=YS+Text:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Геоблокировка -->
+    <div id="geo-block" class="geo-block hidden">
+        <div class="geo-block-content">
+            <h1>Доступ запрещён</h1>
+            <p>Сервис доступен только для пользователей из РФ и стран СНГ</p>
+        </div>
+    </div>
+
+    <!-- Основной контент -->
+    <div id="main-content" class="main-content">
+        <!-- Верхняя панель -->
+        <header class="top-bar">
+            <div class="top-bar-left">
+                <button id="incognito-btn" class="incognito-btn" title="Режим инкогнито">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="top-bar-right">
+                <a href="#" class="top-link" data-page="bookmarks">Закладки</a>
+                <div id="oink-auth" class="oink-auth">
+                    <button id="login-btn" class="login-btn">Войти</button>
+                </div>
+                <div id="oink-profile" class="oink-profile hidden">
+                    <div class="profile-info">
+                        <span id="profile-nickname" class="profile-nickname"></span>
+                        <span id="profile-coins" class="profile-coins">🪙 0</span>
+                    </div>
+                    <img id="profile-avatar" class="profile-avatar" src="" alt="Avatar">
+                </div>
+            </div>
+        </header>
+
+        <!-- Рекламный блок -->
+        <div class="topAdPad">
+            <div id="movie_video"></div>
+            <script type="text/javascript" src="https://vak345.com/s.js?v=03208824bea369b060dba1f2083d6a4c" async></script>
+        </div>
+
+        <!-- Главный контейнер -->
+        <main class="main-container">
+            <!-- Живые обои и погода -->
+            <div class="hero-section">
+                <div class="live-wallpaper" id="liveWallpaper"></div>
+                <div class="weather-widget" id="weatherWidget">
+                    <div class="weather-temp">--°</div>
+                    <div class="weather-desc">Загрузка...</div>
+                    <div class="weather-city">Москва</div>
+                </div>
+            </div>
+
+            <!-- Логотип -->
+            <div class="logo-container">
+                <svg class="onepoisk-logo" width="300" height="100" viewBox="0 0 300 100">
+                    <defs>
+                        <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#fc0;stop-opacity:1" />
+                            <stop offset="50%" style="stop-color:#f90;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#f00;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <text x="10" y="70" font-family="'YS Text', Arial, sans-serif" font-size="60" font-weight="bold" fill="url(#logoGradient)">
+                        One<tspan fill="#333">Poisk</tspan>
+                    </text>
+                    <circle cx="280" cy="30" r="15" fill="#fc0"/>
+                </svg>
+            </div>
+
+            <!-- Поисковая строка -->
+            <div class="search-wrapper">
+                <div class="search-bar-container">
+                    <input type="text" id="search-input" class="search-bar" placeholder="Найдётся всё..." autocomplete="off">
+                    <button id="voice-btn" class="voice-btn" title="Голосовой поиск">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                            <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                        </svg>
+                    </button>
+                    <button id="clear-btn" class="clear-btn hidden" title="Очистить">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="search-buttons">
+                    <button id="search-btn" class="search-btn">Найти</button>
+                    <button id="lucky-btn" class="lucky-btn">Мне повезёт!</button>
+                </div>
+            </div>
+
+            <!-- Сервисы -->
+            <div class="services-container" id="services-grid">
+                <!-- Сервисы будут добавлены через JS -->
+            </div>
+
+            <!-- Лента рекомендаций (Дзен) -->
+            <div class="zen-feed" id="zenFeed">
+                <h3 class="feed-title">Рекомендации для вас</h3>
+                <div class="feed-container" id="feedContainer">
+                    <!-- Новости генерируются JS -->
+                </div>
+            </div>
+        </main>
+
+        <!-- Футер -->
+        <footer class="footer">
+            <div class="footer-links">
+                <a href="#" data-page="faq">FAQ</a>
+                <a href="#" data-page="policy">Политика конфиденциальности</a>
+                <a href="#" data-page="terms">Условия использования</a>
+                <a href="#" data-page="docs">Документация</a>
+                <a href="#" data-page="about">О компании</a>
+            </div>
+            <div class="footer-copy">
+                © 2025 OnePoisk. Сделано с любовью для Oink Tech Ltd Co
+            </div>
+        </footer>
+    </div>
+
+    <!-- Модальное окно для поиска -->
+    <div id="search-modal" class="modal hidden">
+        <div class="modal-overlay"></div>
+        <div class="modal-content search-modal-content">
+            <button class="modal-close">&times;</button>
+            <div class="modal-header">
+                <h2>Результаты поиска</h2>
+            </div>
+            <div class="modal-body">
+                <div id="wikipedia-result" class="wikipedia-result"></div>
+                <div id="search-results" class="search-results"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для сервисов -->
+    <div id="service-modal" class="modal hidden">
+        <div class="modal-overlay"></div>
+        <div class="modal-content service-modal-content">
+            <button class="modal-close">&times;</button>
+            <div class="modal-header">
+                <h2 id="service-title">Сервис</h2>
+            </div>
+            <div class="modal-body">
+                <iframe id="service-frame" class="service-frame" src=""></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для закладок -->
+    <div id="bookmarks-modal" class="modal hidden">
+        <div class="modal-overlay"></div>
+        <div class="modal-content bookmarks-modal-content">
+            <button class="modal-close">&times;</button>
+            <div class="modal-header">
+                <h2>Закладки</h2>
+            </div>
+            <div class="modal-body">
+                <div id="bookmarks-list" class="bookmarks-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для входа/профиля Oink ID -->
+    <div id="oink-modal" class="modal hidden">
+        <div class="modal-overlay"></div>
+        <div class="modal-content oink-modal-content">
+            <button class="modal-close">&times;</button>
+            <div class="modal-header">
+                <h2>Oink ID</h2>
+            </div>
+            <div class="modal-body">
+                <div id="oink-login-form" class="oink-form">
+                    <h3>Вход в Oink ID</h3>
+                    <input type="text" id="oink-username" placeholder="Придумайте никнейм" class="form-input">
+                    <input type="password" id="oink-password" placeholder="Пароль" class="form-input">
+                    <button id="oink-login-submit" class="form-btn">Войти / Регистрация</button>
+                </div>
+                <div id="oink-profile-panel" class="oink-profile-panel hidden">
+                    <div class="profile-header">
+                        <img id="oink-avatar-display" class="oink-avatar-display" src="" alt="Avatar">
+                        <div class="profile-stats">
+                            <h3 id="oink-nickname-display"></h3>
+                            <p id="oink-coins-display" class="coins-display">🪙 0 монет</p>
+                        </div>
+                    </div>
+                    <div class="profile-actions">
+                        <label class="file-upload">
+                            <input type="file" id="avatar-upload" accept="image/*" class="hidden">
+                            <span class="upload-btn">Загрузить фото</span>
+                        </label>
+                        <input type="text" id="nickname-change" placeholder="Новый никнейм" class="form-input">
+                        <button id="nickname-save" class="form-btn">Сохранить</button>
+                    </div>
+                    <div class="subscription-section">
+                        <h4>One Pro подписка</h4>
+                        <p id="sub-status">Статус: Нет активной подписки</p>
+                        <button id="buy-subscription" class="sub-btn">Купить за 99 монет (14 дней)</button>
+                    </div>
+                    <div class="daily-reward">
+                        <button id="daily-claim" class="reward-btn">Забрать ежедневную награду (+10 монет)</button>
+                    </div>
+                    <button id="oink-logout" class="logout-btn">Выйти</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для страниц (FAQ, Policy, etc) -->
+    <div id="page-modal" class="modal hidden">
+        <div class="modal-overlay"></div>
+        <div class="modal-content page-modal-content">
+            <button class="modal-close">&times;</button>
+            <div class="modal-header">
+                <h2 id="page-title">Страница</h2>
+            </div>
+            <div class="modal-body page-content" id="page-content">
+                <!-- Контент страницы -->
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
