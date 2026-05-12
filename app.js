@@ -17,23 +17,51 @@ document.addEventListener('DOMContentLoaded', () => {
 // ============================================
 // ГЕОБЛОКИРОВКА
 // ============================================
-const CIS_COUNTRIES = ['RU', 'BY', 'KZ', 'AM', 'AZ', 'KG', 'MD', 'TJ', 'TM', 'UZ'];
+const CIS_COUNTRIES = ['RU', 'BY', 'KZ', 'AM', 'AZ', 'KG', 'MD', 'TJ', 'TM', 'UZ', 'UA', 'EE', 'LV', 'LT', 'GE'];
 
 async function initGeoCheck() {
     try {
-        const response = await fetch('https://ipapi.co/json/');
-        const data = await response.json();
-        const countryCode = data.country_code;
+        // Пробуем несколько сервисов для определения геолокации
+        const services = [
+            'https://ipapi.co/json/',
+            'https://ipwhois.app/json/',
+            'https://ip-api.com/json/'
+        ];
+        
+        let countryCode = null;
+        
+        for (const service of services) {
+            try {
+                const response = await fetch(service);
+                const data = await response.json();
+                countryCode = data.country_code || data.countryCode;
+                if (countryCode) break;
+            } catch (e) {
+                console.warn(`Service ${service} failed:`, e);
+                continue;
+            }
+        }
+        
+        // Если не удалось определить страну - показываем контент (не блокируем)
+        if (!countryCode) {
+            console.log('Не удалось определить страну, показываем контент');
+            document.getElementById('geo-block').classList.add('hidden');
+            document.getElementById('main-content').classList.remove('hidden');
+            return;
+        }
         
         if (!CIS_COUNTRIES.includes(countryCode)) {
             document.getElementById('geo-block').classList.remove('hidden');
             document.getElementById('main-content').classList.add('hidden');
+        } else {
+            document.getElementById('geo-block').classList.add('hidden');
+            document.getElementById('main-content').classList.remove('hidden');
         }
     } catch (error) {
         console.error('Geo check error:', error);
-        // При ошибке показываем блокировку
-        document.getElementById('geo-block').classList.remove('hidden');
-        document.getElementById('main-content').classList.add('hidden');
+        // При любой ошибке показываем контент, а не блокировку
+        document.getElementById('geo-block').classList.add('hidden');
+        document.getElementById('main-content').classList.remove('hidden');
     }
 }
 
