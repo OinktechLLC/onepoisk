@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Документация - OnePoisk</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .docs-container { max-width: 900px; margin: 48px auto; padding: 24px; }
+        .docs-section { margin-bottom: 40px; }
+        .docs-section h2 { font-size: 24px; margin-bottom: 20px; color: #000; border-bottom: 2px solid #fc0; padding-bottom: 10px; }
+        .docs-section h3 { font-size: 18px; margin: 20px 0 12px; }
+        .docs-section p { font-size: 16px; line-height: 1.8; color: #333; margin-bottom: 12px; }
+        .code-block { background: #f5f5f5; padding: 16px; border-radius: 8px; overflow-x: auto; font-family: 'Courier New', monospace; font-size: 14px; margin: 12px 0; }
+        .feature-list { list-style: none; }
+        .feature-list li { padding: 12px; margin-bottom: 8px; background: #f9f9f9; border-radius: 8px; border-left: 4px solid #fc0; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <a href="../index.html" class="logo">
+                    <svg viewBox="0 0 200 60" class="logo-svg">
+                        <circle cx="30" cy="30" r="25" fill="url(#logoGradient)"/>
+                        <text x="65" y="40" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="#000">OnePoisk</text>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="docs-container">
+        <h1 style="margin-bottom: 32px;">Документация OnePoisk</h1>
+        
+        <div class="docs-section">
+            <h2>🚀 Быстрый старт</h2>
+            <p>OnePoisk — это современная поисковая система с интерфейсом в стиле Яндекс. Все файлы находятся в папке проекта и готовы к развёртыванию.</p>
+            
+            <h3>Структура проекта:</h3>
+            <div class="code-block">
+OnePoisk/
+├── index.html          # Главная страница
+├── landing.html        # Лендинг
+├── css/
+│   └── style.css       # Стили
+├── js/
+│   └── main.js         # Логика и сервисы
+├── assets/             # Изображения и логотипы
+└── docs/               # Документация
+    ├── faq.html
+    ├── policy.html
+    ├── terms.html
+    └── docs.html
+            </div>
+        </div>
+
+        <div class="docs-section">
+            <h2>🔧 Добавление сервисов</h2>
+            <p>Сервисы добавляются через редактирование файла <code>js/main.js</code>. Найдите массив <code>services</code> и добавьте новый объект:</p>
+            
+            <div class="code-block">
+{
+    id: 'newservice',      // Уникальный ID
+    name: 'Название',      // Название сервиса
+    icon: '🎯',            // Эмодзи или символ
+    url: 'https://...'     // URL для открытия
+}
+            </div>
+            
+            <p>После добавления сервиса обновите страницу — он появится в сетке сервисов.</p>
+        </div>
+
+        <div class="docs-section">
+            <h2>🎤 Голосовой поиск</h2>
+            <p>Голосовой поиск использует Web Speech API браузера. Поддерживается в Chrome, Edge и других современных браузерах.</p>
+            <ul class="feature-list">
+                <li>Нажмите на кнопку микрофона</li>
+                <li>Разрешите доступ к микрофону</li>
+                <li>Произнесите запрос</li>
+                <li>Поиск выполнится автоматически</li>
+            </ul>
+        </div>
+
+        <div class="docs-section">
+            <h2>👤 Oink ID</h2>
+            <p>Система профилей пользователей с локальным хранением данных:</p>
+            <ul class="feature-list">
+                <li><strong>Аватар:</strong> Загружается через кнопку 📷 и сохраняется в localStorage</li>
+                <li><strong>Никнейм:</strong> Вводится в текстовое поле</li>
+                <li><strong>Монеты:</strong> Начисляются за ежедневный вход (10 монет/день)</li>
+                <li><strong>One Pro:</strong> Подписка за 100 монет на 14 дней без рекламы</li>
+                <li><strong>Закладки:</strong> Сохранение найденных сайтов</li>
+            </ul>
+        </div>
+
+        <div class="docs-section">
+            <h2>🕶️ Режим инкогнито</h2>
+            <p>Включается кнопкой с маской в шапке. В этом режиме:</p>
+            <ul class="feature-list">
+                <li>Данные не сохраняются в Oink ID</li>
+                <li>Тёмная тема интерфейса</li>
+                <li>История не ведётся</li>
+            </ul>
+        </div>
+
+        <div class="docs-section">
+            <h2>🌍 Географические ограничения</h2>
+            <p>Доступ разрешён только из стран РФ и СНГ. Проверка происходит через API ipapi.co.</p>
+            <p>Список разрешённых стран: RU, BY, KZ, KG, TJ, AM, AZ, MD, UZ, TM, GE, UA</p>
+        </div>
+
+        <div class="docs-section">
+            <h2>📢 Реклама</h2>
+            <p>Рекламные блоки интегрированы в следующих местах:</p>
+            <ul class="feature-list">
+                <li>Верхний блок (topAdPad) — под шапкой</li>
+                <li>Контентный блок (content-ad) — после сервисов</li>
+            </ul>
+            <p>При активной подписке One Pro реклама скрывается автоматически.</p>
+        </div>
+
+        <div class="docs-section">
+            <h2>🔖 Закладки</h2>
+            <p>Кнопка "🔖 В закладки" появляется в правом нижнем углу при открытом сайте в модальном окне. Закладки сохраняются в Oink ID и доступны через модальное окно закладок.</p>
+        </div>
+
+        <div class="docs-section">
+            <h2>🚀 Развёртывание</h2>
+            <h3>Vercel:</h3>
+            <div class="code-block">
+1. Залейте проект на GitHub
+2. Импортируйте репозиторий в Vercel
+3. Deploy автоматически
+            </div>
+
+            <h3>Tatnet и другие платформы:</h3>
+            <p>Просто загрузите все файлы проекта на хостинг. Проект статический и не требует серверной части.</p>
+        </div>
+
+        <div class="docs-section">
+            <h2>📝 Технические детали</h2>
+            <ul class="feature-list">
+                <li><strong>HTML5</strong> — семантическая разметка</li>
+                <li><strong>CSS3</strong> — современные стили с Flexbox и Grid</li>
+                <li><strong>JavaScript ES6+</strong> — модульная архитектура</li>
+                <li><strong>localStorage</strong> — хранение данных пользователя</li>
+                <li><strong>Web Speech API</strong> — голосовой ввод</li>
+                <li><strong>Iframe</strong> — открытие сайтов в модальных окнах</li>
+            </ul>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="faq.html">FAQ</a>
+                <a href="policy.html">Политика конфиденциальности</a>
+                <a href="terms.html">Условия использования</a>
+                <a href="docs.html">Документация</a>
+                <a href="../landing.html">О проекте</a>
+            </div>
+            <div class="footer-copyright">© 2024 OnePoisk</div>
+        </div>
+    </footer>
+</body>
+</html>
