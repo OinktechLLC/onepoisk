@@ -3,235 +3,648 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OnePoisk — найдётся всё!</title>
+    <title>OnePoisk — Найдётся всё</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=YS+Text:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=YS+Text:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --y-yellow: #fc0;
+            --y-red: #f00;
+            --y-black: #000;
+            --bg-main: #ffffff;
+            --input-bg: #f2f2f2;
+            --text-main: #222222;
+            --shadow-soft: 0 4px 32px 0 rgba(0,0,0,0.08);
+            --border-radius-xl: 24px;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'YS Text', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* --- ГЕО-БЛОКИРОВКА --- */
+        #geo-lock {
+            position: fixed;
+            inset: 0;
+            background: #fff;
+            z-index: 10000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        /* --- РЕКЛАМА --- */
+        .topAdPad {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+            min-height: 90px;
+            display: flex;
+            justify-content: center;
+            padding: 10px 0;
+        }
+
+        /* --- HEADER --- */
+        header {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            padding: 20px 24px;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 100;
+        }
+
+        .services-menu {
+            display: flex;
+            gap: 20px;
+            margin-right: 30px;
+        }
+
+        .service-link {
+            text-decoration: none;
+            color: #555;
+            font-size: 15px;
+            transition: color 0.2s;
+        }
+        .service-link:hover { color: var(--y-red); }
+
+        .profile-trigger {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            padding: 4px 12px;
+            border-radius: 20px;
+            transition: background 0.2s;
+        }
+        .profile-trigger:hover { background: #f5f5f5; }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #eee;
+            border: 1px solid rgba(0,0,0,0.05);
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* --- ЦЕНТРАЛЬНЫЙ БЛОК --- */
+        .main-hero {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding-bottom: 10vh;
+            transition: opacity 0.5s;
+        }
+
+        .logo-container {
+            margin-bottom: 24px;
+        }
+
+        .logo-text {
+            font-size: 82px;
+            font-weight: 700;
+            letter-spacing: -4px;
+            cursor: default;
+            user-select: none;
+        }
+        .logo-text span { color: var(--y-red); }
+
+        .search-area {
+            width: 100%;
+            max-width: 720px;
+            position: relative;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: var(--input-bg);
+            border-radius: var(--border-radius-xl);
+            padding: 4px;
+            transition: all 0.3s cubic-bezier(0.2, 0, 0, 1);
+            border: 2px solid transparent;
+        }
+
+        .search-box:focus-within {
+            background: #fff;
+            border-color: var(--y-yellow);
+            box-shadow: var(--shadow-soft);
+            transform: scale(1.02);
+        }
+
+        .search-input {
+            flex: 1;
+            height: 48px;
+            border: none;
+            background: transparent;
+            padding: 0 20px;
+            font-size: 18px;
+            outline: none;
+        }
+
+        .btn-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding-right: 8px;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: background 0.2s;
+        }
+        .icon-btn:hover { background: rgba(0,0,0,0.05); }
+
+        .search-submit {
+            background: var(--y-yellow);
+            border: none;
+            padding: 10px 24px;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+
+        /* --- РЕЗУЛЬТАТЫ --- */
+        #results-view {
+            max-width: 800px;
+            margin: 100px auto 50px;
+            padding: 0 20px;
+        }
+
+        .result-item {
+            margin-bottom: 30px;
+            padding: 15px;
+            border-radius: 16px;
+            transition: background 0.2s;
+        }
+        .result-item:hover { background: #f9f9f9; }
+        .result-item a {
+            font-size: 20px;
+            color: #1a0dab;
+            text-decoration: none;
+        }
+        .result-item a:hover { text-decoration: underline; }
+        .result-item .url { color: #006621; font-size: 14px; margin-bottom: 4px; }
+
+        /* --- МОДАЛЬНЫЙ БРАУЗЕР --- */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: none;
+        }
+
+        .modal-body {
+            width: 95%;
+            height: 92%;
+            margin: 2% auto;
+            background: #fff;
+            border-radius: 16px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 24px 64px rgba(0,0,0,0.3);
+        }
+
+        .modal-toolbar {
+            padding: 12px 20px;
+            background: #f9f9f9;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        iframe {
+            flex: 1;
+            border: none;
+            background: #fff;
+        }
+
+        /* --- ПРЕДУПРЕЖДЕНИЯ --- */
+        #warning-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(25, 25, 25, 0.98);
+            color: #fff;
+            z-index: 2000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .warning-card {
+            max-width: 500px;
+            background: #1a1a1a;
+            padding: 40px;
+            border-radius: 32px;
+            border: 1px solid #333;
+        }
+
+        .warning-icon { font-size: 64px; margin-bottom: 20px; }
+
+        footer {
+            padding: 24px;
+            text-align: center;
+            font-size: 13px;
+            color: #999;
+            background: #fff;
+            border-top: 1px solid #f0f0f0;
+        }
+        footer a { color: #999; text-decoration: none; margin: 0 10px; }
+
+        .hidden { display: none !important; }
+        
+        /* Анимация пульсации для скам-предупреждения */
+        .scam-alert { color: #ff4d4d; font-weight: bold; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+    </style>
 </head>
 <body>
-    <!-- Геоблокировка -->
-    <div id="geo-block" class="geo-block hidden">
-        <div class="geo-block-content">
-            <h1>Доступ запрещён</h1>
-            <p>Сервис доступен только для пользователей из РФ и стран СНГ</p>
+
+    <!-- Гео-блок -->
+    <div id="geo-lock">
+        <h1 style="font-size: 48px;">Oink! Доступ ограничен.</h1>
+        <p>Система OnePoisk работает только в РФ и странах СНГ.</p>
+        <p style="color:#888">Ваше местоположение не соответствует условиям доступа.</p>
+    </div>
+
+    <!-- Интеллектуальный экран предупреждений -->
+    <div id="warning-overlay">
+        <div class="warning-card">
+            <div class="warning-icon" id="warn-icon">⚠️</div>
+            <h1 id="warn-title" style="color: var(--y-red);">ВНИМАНИЕ!</h1>
+            <p id="warn-msg" style="font-size: 18px; line-height: 1.5; color: #ccc;">Этот ресурс заблокирован фильтрами OnePoisk.</p>
+            <div style="margin-top: 30px; display: flex; flex-direction: column; gap: 12px;">
+                <button onclick="hideWarning()" style="padding:16px; border-radius:12px; border:none; cursor:pointer; font-weight:bold; background:#333; color:#fff;">Вернуться в безопасность</button>
+                <button onclick="enableIncognitoAndGo()" id="incognito-btn" style="padding:16px; border-radius:12px; border:none; cursor:pointer; background: var(--y-yellow); color: #000; font-weight:bold;">Открыть в режиме Инкогнито</button>
+            </div>
+            <p id="scam-advice" style="margin-top: 20px; font-size: 13px; color: #ff4d4d;" class="hidden">МЫ НЕ РЕКОМЕНДУЕМ ПОСЕЩАТЬ ЭТОТ САЙТ. ЭТО МОШЕННИКИ.</p>
         </div>
     </div>
 
-    <!-- Основной контент -->
-    <div id="main-content" class="main-content">
-        <!-- Верхняя панель -->
-        <header class="top-bar">
-            <div class="top-bar-left">
-                <button id="incognito-btn" class="incognito-btn" title="Режим инкогнито">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z"/>
-                    </svg>
-                </button>
-            </div>
-            <div class="top-bar-right">
-                <a href="#" class="top-link" data-page="bookmarks">Закладки</a>
-                <div id="oink-auth" class="oink-auth">
-                    <button id="login-btn" class="login-btn">Войти</button>
-                </div>
-                <div id="oink-profile" class="oink-profile hidden">
-                    <div class="profile-info">
-                        <span id="profile-nickname" class="profile-nickname"></span>
-                        <span id="profile-coins" class="profile-coins">🪙 0</span>
-                    </div>
-                    <img id="profile-avatar" class="profile-avatar" src="" alt="Avatar">
-                </div>
-            </div>
-        </header>
-
-        <!-- Рекламный блок -->
-        <div class="topAdPad">
-            <div id="movie_video"></div>
-            <script type="text/javascript" src="https://vak345.com/s.js?v=03208824bea369b060dba1f2083d6a4c" async></script>
-        </div>
-
-        <!-- Главный контейнер -->
-        <main class="main-container">
-            <!-- Живые обои и погода -->
-            <div class="hero-section">
-                <div class="live-wallpaper" id="liveWallpaper"></div>
-                <div class="weather-widget" id="weatherWidget">
-                    <div class="weather-temp">--°</div>
-                    <div class="weather-desc">Загрузка...</div>
-                    <div class="weather-city">Москва</div>
-                </div>
-            </div>
-
-            <!-- Логотип -->
-            <div class="logo-container">
-                <svg class="onepoisk-logo" width="300" height="100" viewBox="0 0 300 100">
-                    <defs>
-                        <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" style="stop-color:#fc0;stop-opacity:1" />
-                            <stop offset="50%" style="stop-color:#f90;stop-opacity:1" />
-                            <stop offset="100%" style="stop-color:#f00;stop-opacity:1" />
-                        </linearGradient>
-                    </defs>
-                    <text x="10" y="70" font-family="'YS Text', Arial, sans-serif" font-size="60" font-weight="bold" fill="url(#logoGradient)">
-                        One<tspan fill="#333">Poisk</tspan>
-                    </text>
-                    <circle cx="280" cy="30" r="15" fill="#fc0"/>
-                </svg>
-            </div>
-
-            <!-- Поисковая строка -->
-            <div class="search-wrapper">
-                <div class="search-bar-container">
-                    <input type="text" id="search-input" class="search-bar" placeholder="Найдётся всё..." autocomplete="off">
-                    <button id="voice-btn" class="voice-btn" title="Голосовой поиск">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
-                            <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
-                        </svg>
-                    </button>
-                    <button id="clear-btn" class="clear-btn hidden" title="Очистить">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-                        </svg>
-                    </button>
-                </div>
-                <div class="search-buttons">
-                    <button id="search-btn" class="search-btn">Найти</button>
-                    <button id="lucky-btn" class="lucky-btn">Мне повезёт!</button>
-                </div>
-            </div>
-
-            <!-- Сервисы -->
-            <div class="services-container" id="services-grid">
-                <!-- Сервисы будут добавлены через JS -->
-            </div>
-
-            <!-- Лента рекомендаций (Дзен) -->
-            <div class="zen-feed" id="zenFeed">
-                <h3 class="feed-title">Рекомендации для вас</h3>
-                <div class="feed-container" id="feedContainer">
-                    <!-- Новости генерируются JS -->
-                </div>
-            </div>
-        </main>
-
-        <!-- Футер -->
-        <footer class="footer">
-            <div class="footer-links">
-                <a href="#" data-page="faq">FAQ</a>
-                <a href="#" data-page="policy">Политика конфиденциальности</a>
-                <a href="#" data-page="terms">Условия использования</a>
-                <a href="#" data-page="docs">Документация</a>
-                <a href="#" data-page="about">О компании</a>
-            </div>
-            <div class="footer-copy">
-                © 2025 OnePoisk. Сделано с любовью для Oink Tech Ltd Co
-            </div>
-        </footer>
+    <!-- Реклама -->
+    <div class="topAdPad" id="ad-block">
+        <div id="movie_video"></div>
+        <script type="text/javascript" src="https://vak345.com/s.js?v=03208824bea369b060dba1f2083d6a4c" async></script>
     </div>
 
-    <!-- Модальное окно для поиска -->
-    <div id="search-modal" class="modal hidden">
-        <div class="modal-overlay"></div>
-        <div class="modal-content search-modal-content">
-            <button class="modal-close">&times;</button>
-            <div class="modal-header">
-                <h2>Результаты поиска</h2>
+    <header>
+        <div class="services-menu" id="services-nav"></div>
+        <div class="profile-trigger" onclick="toggleOinkID()">
+            <div id="balance-badge" style="font-size: 13px; font-weight: 500;">0 🪙</div>
+            <div class="avatar" id="u-avatar"></div>
+            <span id="u-name" style="font-weight: 500;">Войти</span>
+        </div>
+    </header>
+
+    <main class="main-hero" id="search-view">
+        <div class="logo-container">
+            <div class="logo-text">One<span>Poisk</span></div>
+        </div>
+
+        <div class="search-area">
+            <div class="search-box">
+                <input type="text" id="q" class="search-input" placeholder="Найдётся всё" autocomplete="off">
+                <div class="btn-group">
+                    <button class="icon-btn" id="voice-btn" title="Голосовой поиск">🎤</button>
+                    <button class="search-submit" onclick="performSearch()">Найти</button>
+                </div>
             </div>
-            <div class="modal-body">
-                <div id="wikipedia-result" class="wikipedia-result"></div>
-                <div id="search-results" class="search-results"></div>
+            <div id="incognito-indicator" style="margin-top: 15px; font-size: 13px; color: #777; cursor: pointer; text-align: center;">
+                <span id="inc-icon">⚪</span> Режим инкогнито <span id="inc-status-text">(ВЫКЛ)</span>
             </div>
+        </div>
+    </main>
+
+    <div id="results-view" class="hidden"></div>
+
+    <!-- Oink ID -->
+    <div id="oink-modal" class="modal" onclick="if(event.target==this)closeModal('oink-modal')">
+        <div class="modal-body" style="max-width: 400px; height: auto; padding: 30px;">
+            <h2 style="margin-top:0">Oink ID</h2>
+            <div style="margin-bottom: 20px;">
+                <label style="font-size:12px; color:#888;">ВАШ НИКНЕЙМ</label>
+                <input type="text" id="set-name" style="width:100%; padding:12px; margin-top:5px; border:1px solid #ddd; border-radius:12px; outline:none;">
+            </div>
+            <div style="margin-bottom: 20px;">
+                <label style="font-size:12px; color:#888;">ФОТО ПРОФИЛЯ</label>
+                <input type="file" id="set-avatar" style="margin-top:10px;">
+            </div>
+            <div id="pro-badge-ui"></div>
+            <button onclick="saveProfile()" style="width:100%; padding:14px; background:var(--y-yellow); border:none; border-radius:14px; font-weight:bold; cursor:pointer; margin-top:10px;">Сохранить профиль</button>
+            <button onclick="buyOnePro()" style="width:100%; padding:14px; background:#000; color:#fff; border:none; border-radius:14px; font-weight:bold; cursor:pointer; margin-top:10px;">Купить One Pro (100 🪙)</button>
         </div>
     </div>
 
-    <!-- Модальное окно для сервисов -->
-    <div id="service-modal" class="modal hidden">
-        <div class="modal-overlay"></div>
-        <div class="modal-content service-modal-content">
-            <button class="modal-close">&times;</button>
-            <div class="modal-header">
-                <h2 id="service-title">Сервис</h2>
-            </div>
-            <div class="modal-body">
-                <iframe id="service-frame" class="service-frame" src=""></iframe>
-            </div>
-        </div>
-    </div>
-
-    <!-- Модальное окно для закладок -->
-    <div id="bookmarks-modal" class="modal hidden">
-        <div class="modal-overlay"></div>
-        <div class="modal-content bookmarks-modal-content">
-            <button class="modal-close">&times;</button>
-            <div class="modal-header">
-                <h2>Закладки</h2>
-            </div>
-            <div class="modal-body">
-                <div id="bookmarks-list" class="bookmarks-list"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Модальное окно для входа/профиля Oink ID -->
-    <div id="oink-modal" class="modal hidden">
-        <div class="modal-overlay"></div>
-        <div class="modal-content oink-modal-content">
-            <button class="modal-close">&times;</button>
-            <div class="modal-header">
-                <h2>Oink ID</h2>
-            </div>
-            <div class="modal-body">
-                <div id="oink-login-form" class="oink-form">
-                    <h3>Вход в Oink ID</h3>
-                    <input type="text" id="oink-username" placeholder="Придумайте никнейм" class="form-input">
-                    <input type="password" id="oink-password" placeholder="Пароль" class="form-input">
-                    <button id="oink-login-submit" class="form-btn">Войти / Регистрация</button>
-                </div>
-                <div id="oink-profile-panel" class="oink-profile-panel hidden">
-                    <div class="profile-header">
-                        <img id="oink-avatar-display" class="oink-avatar-display" src="" alt="Avatar">
-                        <div class="profile-stats">
-                            <h3 id="oink-nickname-display"></h3>
-                            <p id="oink-coins-display" class="coins-display">🪙 0 монет</p>
-                        </div>
-                    </div>
-                    <div class="profile-actions">
-                        <label class="file-upload">
-                            <input type="file" id="avatar-upload" accept="image/*" class="hidden">
-                            <span class="upload-btn">Загрузить фото</span>
-                        </label>
-                        <input type="text" id="nickname-change" placeholder="Новый никнейм" class="form-input">
-                        <button id="nickname-save" class="form-btn">Сохранить</button>
-                    </div>
-                    <div class="subscription-section">
-                        <h4>One Pro подписка</h4>
-                        <p id="sub-status">Статус: Нет активной подписки</p>
-                        <button id="buy-subscription" class="sub-btn">Купить за 99 монет (14 дней)</button>
-                    </div>
-                    <div class="daily-reward">
-                        <button id="daily-claim" class="reward-btn">Забрать ежедневную награду (+10 монет)</button>
-                    </div>
-                    <button id="oink-logout" class="logout-btn">Выйти</button>
+    <!-- Модальный браузер -->
+    <div id="browser-modal" class="modal">
+        <div class="modal-body">
+            <div class="modal-toolbar">
+                <strong id="frame-title">Просмотр</strong>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div id="safety-tag" style="font-size:11px; padding:4px 8px; border-radius:4px; background:#e8f5e9; color:#2e7d32;">Безопасно</div>
+                    <button onclick="addToBookmarks()" style="padding:8px 16px; border-radius:8px; border:1px solid #ddd; background:#fff; cursor:pointer;">⭐ Сохранить</button>
+                    <button onclick="closeModal('browser-modal')" style="padding:8px 16px; border-radius:8px; border:none; background:var(--y-red); color:#fff; cursor:pointer;">Закрыть</button>
                 </div>
             </div>
+            <iframe id="target-frame" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
         </div>
     </div>
 
-    <!-- Модальное окно для страниц (FAQ, Policy, etc) -->
-    <div id="page-modal" class="modal hidden">
-        <div class="modal-overlay"></div>
-        <div class="modal-content page-modal-content">
-            <button class="modal-close">&times;</button>
-            <div class="modal-header">
-                <h2 id="page-title">Страница</h2>
-            </div>
-            <div class="modal-body page-content" id="page-content">
-                <!-- Контент страницы -->
-            </div>
+    <footer>
+        <div style="margin-bottom:15px;">
+            <a href="#" onclick="alert('Справочный центр OnePoisk 2026')">Справка</a>
+            <a href="#">Обратная связь</a>
+            <a href="#">Для бизнеса</a>
+            <a href="#">Разработчикам</a>
         </div>
-    </div>
+        <p>&copy; 2026 Oink Tech. OnePoisk — зарегистрированный товарный знак.</p>
+    </footer>
 
-    <script src="app.js"></script>
+    <script>
+        // Использование динамического CORS-прокси вместо статического
+        const PROXY_BASE = "https://api.allorigins.win/raw?url=";
+        
+        // Расширенный список для выявления взрослых и скам сайтов
+        const BANNED_LIST = {
+            adult: ['porn', 'sex', 'xvideos', 'pornhub', 'rt.pornhub', 'brazzers', 'порно', 'секс'],
+            scam: ['casino', 'казино', 'vulkan', 'bet', 'win', 'crypto-giveaway', 'free-btc', 'invest-scam', 'мошенники', 'lucky', 'lottery']
+        };
+        
+        let state = {
+            user: JSON.parse(localStorage.getItem('oink_v4')) || { name: 'Гость', avatar: '', coins: 0, pro: false },
+            incognito: false,
+            bookmarks: JSON.parse(localStorage.getItem('oink_bookmarks')) || []
+        };
+
+        window.onload = () => {
+            checkGeoAccess();
+            renderTopServices();
+            refreshUI();
+            
+            if(localStorage.getItem('bonus_day') !== new Date().toDateString()) {
+                state.user.coins += 20;
+                localStorage.setItem('bonus_day', new Date().toDateString());
+                saveAppState();
+            }
+
+            if(state.user.pro) document.getElementById('ad-block').classList.add('hidden');
+        };
+
+        function saveAppState() {
+            localStorage.setItem('oink_v4', JSON.stringify(state.user));
+            refreshUI();
+        }
+
+        function refreshUI() {
+            document.getElementById('u-name').innerText = state.user.name;
+            document.getElementById('balance-badge').innerText = `${state.user.coins} 🪙`;
+            if(state.user.avatar) {
+                document.getElementById('u-avatar').style.backgroundImage = `url(${state.user.avatar})`;
+            }
+            document.getElementById('pro-badge-ui').innerHTML = state.user.pro ? 
+                '<div style="text-align:center; color:#d4af37; padding:10px; font-weight:700;">✨ ONE PRO АКТИВИРОВАН</div>' : '';
+        }
+
+        async function checkGeoAccess() {
+            const ALLOWED = ['RU', 'BY', 'KZ', 'AM', 'KG', 'TJ', 'UZ', 'MD'];
+            try {
+                const res = await fetch('https://ipapi.co/json/');
+                const data = await res.json();
+                if(!ALLOWED.includes(data.country_code)) {
+                    document.getElementById('geo-lock').style.display = 'flex';
+                }
+            } catch(e) { console.warn("Geo check skipped"); }
+        }
+
+        function renderTopServices() {
+            const nav = document.getElementById('services-nav');
+            const items = [
+                {n: 'Почта', u: 'https://mail.ru'},
+                {n: 'Новости', u: 'https://newsru.tatnet.app'},
+                {n: 'Переводчик', u: 'https://translate.yandex.ru'},
+                {n: 'Игры', u: 'https://yandex.ru/games'}
+            ];
+            items.forEach(i => {
+                const el = document.createElement('a');
+                el.className = 'service-link';
+                el.innerText = i.n;
+                el.href = "#";
+                el.onclick = () => openSecureWeb(i.u, i.n);
+                nav.appendChild(el);
+            });
+        }
+
+        // --- ЛОГИКА ПОИСКА ---
+        async function performSearch() {
+            const rawQuery = document.getElementById('q').value;
+            const query = rawQuery.toLowerCase();
+            if(!query) return;
+
+            // Проверка на скам или взрослый контент
+            const isAdult = BANNED_LIST.adult.some(k => query.includes(k));
+            const isScam = BANNED_LIST.scam.some(k => query.includes(k));
+
+            if(isAdult || isScam) {
+                const title = isScam ? "ОСТОРОЖНО: МОШЕННИКИ!" : "КОНТЕНТ ДЛЯ ВЗРОСЛЫХ";
+                const msg = isScam ? 
+                    "Этот запрос ведет на сайты, замеченные в мошенничестве. Мы настоятельно рекомендуем не переходить по ссылкам." : 
+                    "Этот поиск может содержать материалы 18+. Мы заблокировали прямой доступ для вашей безопасности.";
+                
+                showUniversalWarning(title, msg, isScam);
+                return;
+            }
+
+            document.getElementById('search-view').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('search-view').classList.add('hidden');
+                const results = document.getElementById('results-view');
+                results.classList.remove('hidden');
+                results.innerHTML = "<p style='text-align:center;'>Анализируем интернет...</p>";
+                
+                fetchResults(query);
+            }, 300);
+        }
+
+        async function fetchResults(query) {
+            const resView = document.getElementById('results-view');
+            try {
+                // Используем Google API (ваши ключи из исходника)
+                const r = await fetch(`https://www.googleapis.com/customsearch/v1?key=AIzaSyA_VFfEHQ8iQQMuyMya5dbX3oGRLimbE1I&cx=f037a62d8533a420b&q=${query}`);
+                const data = await r.json();
+                
+                resView.innerHTML = `<h2 style="margin-bottom:30px;">Поиск по запросу: ${query}</h2>`;
+                
+                if(data.items) {
+                    data.items.forEach(item => {
+                        const div = document.createElement('div');
+                        div.className = 'result-item';
+                        div.innerHTML = `
+                            <div class="url">${item.displayLink}</div>
+                            <a href="#" onclick="openSecureWeb('${item.link}', '${item.title}')">${item.title}</a>
+                            <div style="margin-top:8px; color:#666; font-size:14px;">${item.snippet}</div>
+                        `;
+                        resView.appendChild(div);
+                    });
+                } else {
+                    resView.innerHTML += "<p>Ничего не найдено. Попробуйте другой запрос.</p>";
+                }
+            } catch(e) {
+                resView.innerHTML = "<p>Ошибка загрузки результатов. Проверьте соединение.</p>";
+            }
+        }
+
+        // --- БЕЗОПАСНЫЙ БРАУЗЕР ---
+        function openSecureWeb(url, title) {
+            const urlLower = url.toLowerCase();
+            const isScam = BANNED_LIST.scam.some(k => urlLower.includes(k));
+            const isAdult = BANNED_LIST.adult.some(k => urlLower.includes(k));
+
+            if(isScam || isAdult) {
+                state.lastTarget = {url, title};
+                showUniversalWarning(
+                    isScam ? "САЙТ-МОШЕННИК" : "КОНТЕНТ 18+", 
+                    "Безопасный поиск OnePoisk ограничил доступ к этому ресурсу.", 
+                    isScam
+                );
+                return;
+            }
+
+            const frame = document.getElementById('target-frame');
+            const safetyTag = document.getElementById('safety-tag');
+            
+            // Если сайт защищен CORS, используем прокси для рендеринга контента
+            const finalUrl = PROXY_BASE + encodeURIComponent(url);
+            
+            frame.src = finalUrl;
+            document.getElementById('frame-title').innerText = title;
+            safetyTag.innerText = "Безопасно";
+            safetyTag.style.background = "#e8f5e9";
+            safetyTag.style.color = "#2e7d32";
+            
+            document.getElementById('browser-modal').style.display = 'block';
+        }
+
+        function showUniversalWarning(title, msg, showScamLabel) {
+            document.getElementById('warn-title').innerText = title;
+            document.getElementById('warn-msg').innerText = msg;
+            document.getElementById('warn-icon').innerText = showScamLabel ? "🚫" : "🔞";
+            
+            const advice = document.getElementById('scam-advice');
+            if(showScamLabel) advice.classList.remove('hidden');
+            else advice.classList.add('hidden');
+            
+            document.getElementById('warning-overlay').style.display = 'flex';
+        }
+
+        function hideWarning() {
+            document.getElementById('warning-overlay').style.display = 'none';
+        }
+
+        function enableIncognitoAndGo() {
+            state.incognito = true;
+            updateIncognitoMode();
+            hideWarning();
+            if(state.lastTarget) {
+                openSecureWeb(state.lastTarget.url, state.lastTarget.title);
+                state.lastTarget = null;
+            }
+        }
+
+        function updateIncognitoMode() {
+            document.getElementById('inc-icon').innerText = state.incognito ? '⚫' : '⚪';
+            document.getElementById('inc-status-text').innerText = state.incognito ? '(ВКЛ)' : '(ВЫКЛ)';
+            document.body.style.filter = state.incognito ? 'grayscale(0.5) contrast(1.1) brightness(0.9)' : 'none';
+        }
+
+        document.getElementById('incognito-indicator').onclick = () => {
+            state.incognito = !state.incognito;
+            updateIncognitoMode();
+        };
+
+        // --- ГОЛОС ---
+        if('webkitSpeechRecognition' in window) {
+            const rec = new webkitSpeechRecognition();
+            rec.lang = 'ru-RU';
+            document.getElementById('voice-btn').onclick = () => {
+                rec.start();
+                document.getElementById('q').placeholder = "Говорите...";
+            };
+            rec.onresult = (e) => {
+                document.getElementById('q').value = e.results[0][0].transcript;
+                performSearch();
+            };
+        }
+
+        // --- ПРОФИЛЬ И МОНЕТЫ ---
+        function toggleOinkID() { document.getElementById('oink-modal').style.display = 'block'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+        function saveProfile() {
+            const name = document.getElementById('set-name').value;
+            const file = document.getElementById('set-avatar').files[0];
+            if(name) state.user.name = name;
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = (e) => { state.user.avatar = e.target.result; saveAppState(); };
+                reader.readAsDataURL(file);
+            } else saveAppState();
+            closeModal('oink-modal');
+        }
+
+        function buyOnePro() {
+            if(state.user.coins >= 100) {
+                state.user.coins -= 100;
+                state.user.pro = true;
+                saveAppState();
+                alert("One Pro активирован! Реклама отключена.");
+                location.reload();
+            } else alert("Недостаточно монет! Продолжайте пользоваться OnePoisk для получения бонусов.");
+        }
+
+        function addToBookmarks() {
+            const url = document.getElementById('target-frame').src;
+            if(!state.bookmarks.includes(url)) {
+                state.bookmarks.push(url);
+                localStorage.setItem('oink_bookmarks', JSON.stringify(state.bookmarks));
+                alert("Сайт сохранен в ваши закладки Oink ID.");
+            }
+        }
+    </script>
 </body>
 </html>
