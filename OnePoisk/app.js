@@ -815,3 +815,306 @@ function initIncognitoMode() {
 window.openModal = openModal;
 window.closeAllModals = closeAllModals;
 window.addToBookmarks = addToBookmarks;
+
+// ============================================
+// ЖИВЫЕ ОБОИ И ПОГОДА
+// ============================================
+function initLiveWallpaper() {
+    const wallpaper = document.getElementById('liveWallpaper');
+    if (!wallpaper) return;
+    
+    // Анимация градиента уже в CSS
+    // Можно добавить интерактивность с мышью
+    wallpaper.addEventListener('mousemove', (e) => {
+        const x = e.clientX / window.innerWidth;
+        const y = e.clientY / window.innerHeight;
+        wallpaper.style.background = `linear-gradient(${135 + x * 45}deg, #667eea 0%, #764ba2 ${50 + y * 20}%, #f093fb 100%)`;
+    });
+}
+
+// ============================================
+// ВИДЖЕТ ПОГОДЫ
+// ============================================
+async function initWeatherWidget() {
+    const widget = document.getElementById('weatherWidget');
+    if (!widget) return;
+    
+    const cities = ['Москва', 'Санкт-Петербург', 'Казань', 'Новосибирск', 'Екатеринбург'];
+    const randomCity = cities[Math.floor(Math.random() * cities.length)];
+    
+    try {
+        // Используем открытый API погоды (Open-Meteo - бесплатный, не требует ключа)
+        const geoResponse = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(randomCity)}&count=1&language=ru&format=json`);
+        const geoData = await geoResponse.json();
+        
+        if (geoData.results && geoData.results[0]) {
+            const { latitude, longitude, name } = geoData.results[0];
+            
+            const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`);
+            const weatherData = await weatherResponse.json();
+            
+            if (weatherData.current_weather) {
+                const temp = Math.round(weatherData.current_weather.temperature);
+                const windSpeed = weatherData.current_weather.windspeed;
+                
+                widget.querySelector('.weather-temp').textContent = `${temp > 0 ? '+' : ''}${temp}°`;
+                widget.querySelector('.weather-city').textContent = name;
+                
+                // Определение описания погоды
+                const weatherCode = weatherData.current_weather.weathercode;
+                const descriptions = {
+                    0: 'Ясно ☀️',
+                    1: 'Преимущественно ясно 🌤️',
+                    2: 'Облачно ⛅',
+                    3: 'Пасмурно ☁️',
+                    45: 'Туман 🌫️',
+                    48: 'Иней 🌨️',
+                    51: 'Морось 💧',
+                    53: 'Морось 💧',
+                    55: 'Морось 💧',
+                    61: 'Дождь 🌧️',
+                    63: 'Дождь 🌧️',
+                    65: 'Сильный дождь ⛈️',
+                    71: 'Снег ❄️',
+                    73: 'Снег ❄️',
+                    75: 'Снегопад 🌨️',
+                    80: 'Ливень ☔',
+                    81: 'Ливень ☔',
+                    82: 'Сильный ливень ⛈️',
+                    95: 'Гроза ⚡',
+                    96: 'Гроза с градом ⛈️',
+                    99: 'Гроза с градом ⛈️'
+                };
+                
+                widget.querySelector('.weather-desc').textContent = descriptions[weatherCode] || 'Неизвестно';
+            }
+        }
+    } catch (error) {
+        console.error('Weather error:', error);
+        widget.querySelector('.weather-temp').textContent = '--°';
+        widget.querySelector('.weather-desc').textContent = 'Нет данных';
+        widget.querySelector('.weather-city').textContent = randomCity;
+    }
+}
+
+// ============================================
+// ЛЕНТА РЕКОМЕНДАЦИЙ (ДЗЕН)
+// ============================================
+function initZenFeed() {
+    const container = document.getElementById('feedContainer');
+    if (!container) return;
+    
+    const newsTopics = [
+        { title: 'Технологии будущего: что нас ждёт в 2025 году', source: 'TechNews', color: '#667eea' },
+        { title: 'Новые возможности искусственного интеллекта', source: 'AI World', color: '#764ba2' },
+        { title: 'Космические исследования: последние открытия', source: 'Space Daily', color: '#f093fb' },
+        { title: 'Экология и устойчивое развитие', source: 'Green Planet', color: '#4CAF50' },
+        { title: 'Спорт: главные события недели', source: 'Sport Express', color: '#f44336' },
+        { title: 'Культура и искусство: новые выставки', source: 'Art Review', color: '#ff9800' },
+        { title: 'Экономика: прогнозы экспертов', source: 'Finance Today', color: '#2196f3' },
+        { title: 'Путешествия: топ направлений этого сезона', source: 'Travel Guide', color: '#00bcd4' }
+    ];
+    
+    const fragment = document.createDocumentFragment();
+    
+    newsTopics.forEach((news, index) => {
+        const card = document.createElement('div');
+        card.className = 'feed-card';
+        card.onclick = () => {
+            showNotification(`Открываем: ${news.title}`, 'success');
+        };
+        
+        const gradient = `linear-gradient(135deg, ${news.color} 0%, ${news.color}dd 100%)`;
+        
+        card.innerHTML = `
+            <div class="feed-image" style="background: ${gradient}"></div>
+            <div class="feed-content">
+                <div class="feed-source">${news.source}</div>
+                <div class="feed-headline">${news.title}</div>
+                <div class="feed-time">${index * 15 + 5} минут назад</div>
+            </div>
+        `;
+        
+        fragment.appendChild(card);
+    });
+    
+    container.appendChild(fragment);
+}
+
+// ============================================
+// БЫСТРЫЕ ССЫЛКИ
+// ============================================
+function initQuickLinks() {
+    const searchWrapper = document.querySelector('.search-wrapper');
+    if (!searchWrapper) return;
+    
+    const quickLinksDiv = document.createElement('div');
+    quickLinksDiv.className = 'quick-links';
+    
+    const links = [
+        { text: '🔥 Тренды', query: 'популярные запросы сегодня' },
+        { text: '📺 ТВ онлайн', query: 'смотреть телевизор онлайн бесплатно' },
+        { text: '🎵 Музыка', query: 'слушать музыку онлайн' },
+        { text: '🎬 Кино', query: 'смотреть фильмы онлайн бесплатно' },
+        { text: '💰 Курс валют', query: 'курс доллара и евро сегодня' }
+    ];
+    
+    links.forEach(link => {
+        const span = document.createElement('span');
+        span.className = 'quick-link';
+        span.textContent = link.text;
+        span.onclick = () => {
+            document.getElementById('search-input').value = link.query;
+            performSearch(link.query);
+        };
+        quickLinksDiv.appendChild(span);
+    });
+    
+    searchWrapper.appendChild(quickLinksDiv);
+}
+
+// ============================================
+// УВЕДОМЛЕНИЯ
+// ============================================
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    
+    const icons = {
+        success: '✅',
+        error: '❌',
+        info: 'ℹ️',
+        warning: '⚠️'
+    };
+    
+    notification.innerHTML = `
+        <span class="notification-icon">${icons[type] || icons.info}</span>
+        <span class="notification-text">${message}</span>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.animation = 'slideIn 0.3s ease-out reverse';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+// ============================================
+// ДОПОЛНИТЕЛЬНЫЕ ФУНКЦИИ ЯНДЕКС БРАУЗЕРА
+// ============================================
+
+// Алиса (голосовой помощник) - улучшенная версия
+function initAliceAssistant() {
+    const voiceBtn = document.getElementById('voice-btn');
+    if (!voiceBtn) return;
+    
+    let isListening = false;
+    
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        
+        recognition.lang = 'ru-RU';
+        recognition.continuous = false;
+        recognition.interimResults = true;
+        
+        recognition.onstart = () => {
+            isListening = true;
+            voiceBtn.style.background = '#fc0';
+            voiceBtn.style.animation = 'pulse 0.5s infinite';
+            showNotification('Слушаю вас...', 'info');
+        };
+        
+        recognition.onresult = (event) => {
+            const transcript = Array.from(event.results)
+                .map(result => result[0].transcript)
+                .join('');
+            
+            document.getElementById('search-input').value = transcript;
+            
+            if (event.results[0].isFinal) {
+                performSearch(transcript);
+            }
+        };
+        
+        recognition.onerror = (event) => {
+            isListening = false;
+            voiceBtn.style.background = '';
+            voiceBtn.style.animation = '';
+            showNotification('Ошибка распознавания речи', 'error');
+        };
+        
+        recognition.onend = () => {
+            isListening = false;
+            voiceBtn.style.background = '';
+            voiceBtn.style.animation = '';
+        };
+        
+        voiceBtn.onclick = () => {
+            if (isListening) {
+                recognition.stop();
+            } else {
+                recognition.start();
+            }
+        };
+    } else {
+        voiceBtn.style.display = 'none';
+        showNotification('Голосовой ввод не поддерживается вашим браузером', 'warning');
+    }
+}
+
+// Турбо-режим (ускорение загрузки)
+function initTurboMode() {
+    // Сохраняем предпочтение турбо-режима
+    const turboEnabled = localStorage.getItem('onepoisk_turbo') === 'true';
+    
+    if (turboEnabled) {
+        document.body.classList.add('turbo-mode');
+        showNotification('Турбо-режим включён', 'success');
+    }
+}
+
+// Синхронизация Oink ID между вкладками
+function initOinkSync() {
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'oink_user') {
+            location.reload(); // Перезагружаем при изменении профиля в другой вкладке
+        }
+        if (e.key === 'oink_coins') {
+            updateCoinDisplay();
+        }
+    });
+}
+
+// Статистика поиска
+function initSearchStats() {
+    const stats = JSON.parse(localStorage.getItem('onepoisk_stats') || '{"searches": 0, "bookmarks": 0}');
+    console.log('OnePoisk Stats:', stats);
+}
+
+// ============================================
+// ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ
+// ============================================
+document.addEventListener('DOMContentLoaded', () => {
+    // Инициализация приложения
+    initGeoCheck();
+    initServices();
+    initSearch();
+    initVoiceSearch();
+    initModals();
+    initOinkID();
+    initBookmarks();
+    initPages();
+    initIncognitoMode();
+    
+    // Новые функции
+    initLiveWallpaper();
+    initWeatherWidget();
+    initZenFeed();
+    initQuickLinks();
+    initAliceAssistant();
+    initTurboMode();
+    initOinkSync();
+    initSearchStats();
+});

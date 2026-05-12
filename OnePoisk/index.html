@@ -52,6 +52,16 @@
 
         <!-- Главный контейнер -->
         <main class="main-container">
+            <!-- Живые обои и погода -->
+            <div class="hero-section">
+                <div class="live-wallpaper" id="liveWallpaper"></div>
+                <div class="weather-widget" id="weatherWidget">
+                    <div class="weather-temp">--°</div>
+                    <div class="weather-desc">Загрузка...</div>
+                    <div class="weather-city">Москва</div>
+                </div>
+            </div>
+
             <!-- Логотип -->
             <div class="logo-container">
                 <svg class="onepoisk-logo" width="300" height="100" viewBox="0 0 300 100">
@@ -94,6 +104,14 @@
             <!-- Сервисы -->
             <div class="services-container" id="services-grid">
                 <!-- Сервисы будут добавлены через JS -->
+            </div>
+
+            <!-- Лента рекомендаций (Дзен) -->
+            <div class="zen-feed" id="zenFeed">
+                <h3 class="feed-title">Рекомендации для вас</h3>
+                <div class="feed-container" id="feedContainer">
+                    <!-- Новости генерируются JS -->
+                </div>
             </div>
         </main>
 

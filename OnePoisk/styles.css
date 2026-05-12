@@ -867,3 +867,241 @@ body.incognito-mode .incognito-message {
     margin-bottom: 20px;
     text-align: center;
 }
+
+/* Живые обои и погода */
+.hero-section {
+    position: relative;
+    width: 100%;
+    max-width: 800px;
+    margin: 20px auto;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.live-wallpaper {
+    width: 100%;
+    height: 200px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    background-size: 400% 400%;
+    animation: gradientShift 15s ease infinite;
+    position: relative;
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.weather-widget {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    padding: 15px 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    text-align: right;
+}
+
+.weather-temp {
+    font-size: 2.5em;
+    font-weight: bold;
+    color: var(--ya-dark);
+    line-height: 1;
+}
+
+.weather-desc {
+    font-size: 0.9em;
+    color: var(--text-secondary);
+    margin: 5px 0;
+}
+
+.weather-city {
+    font-size: 0.85em;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+/* Лента рекомендаций (Дзен) */
+.zen-feed {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+.feed-title {
+    font-size: 1.5em;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: var(--ya-dark);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.feed-title::before {
+    content: '📰';
+    font-size: 1.2em;
+}
+
+.feed-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.feed-card {
+    background: var(--bg-primary);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+}
+
+.feed-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.feed-image {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.feed-content {
+    padding: 15px;
+}
+
+.feed-source {
+    font-size: 0.8em;
+    color: var(--ya-orange);
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+.feed-headline {
+    font-size: 1em;
+    font-weight: 600;
+    color: var(--ya-dark);
+    line-height: 1.4;
+    margin-bottom: 10px;
+}
+
+.feed-time {
+    font-size: 0.75em;
+    color: var(--text-secondary);
+}
+
+/* Анимация пульсации для логотипа */
+.pulsing-dot {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.1); }
+}
+
+/* Уведомления */
+.notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--bg-primary);
+    padding: 15px 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    animation: slideIn 0.3s ease-out;
+    border-left: 4px solid var(--ya-orange);
+}
+
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+.notification.success {
+    border-left-color: #4CAF50;
+}
+
+.notification.error {
+    border-left-color: #e94560;
+}
+
+.notification-icon {
+    font-size: 1.5em;
+}
+
+.notification-text {
+    font-size: 0.95em;
+    color: var(--ya-dark);
+}
+
+/* Быстрые ссылки под поиском */
+.quick-links {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+}
+
+.quick-link {
+    padding: 8px 16px;
+    background: var(--bg-secondary);
+    border-radius: 20px;
+    font-size: 0.9em;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.quick-link:hover {
+    background: var(--ya-orange);
+    color: white;
+}
+
+/* Адаптивность для новых элементов */
+@media (max-width: 768px) {
+    .hero-section {
+        margin: 10px;
+    }
+    
+    .live-wallpaper {
+        height: 150px;
+    }
+    
+    .weather-widget {
+        top: 10px;
+        right: 10px;
+        padding: 10px 15px;
+    }
+    
+    .weather-temp {
+        font-size: 2em;
+    }
+    
+    .feed-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .quick-links {
+        gap: 10px;
+    }
+    
+    .quick-link {
+        padding: 6px 12px;
+        font-size: 0.85em;
+    }
+}
