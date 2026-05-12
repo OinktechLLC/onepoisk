@@ -17,23 +17,54 @@ document.addEventListener('DOMContentLoaded', () => {
 // ============================================
 // ГЕОБЛОКИРОВКА
 // ============================================
-const CIS_COUNTRIES = ['RU', 'BY', 'KZ', 'AM', 'AZ', 'KG', 'MD', 'TJ', 'TM', 'UZ'];
+const CIS_COUNTRIES = ['RU', 'BY', 'KZ', 'AM', 'AZ', 'KG', 'MD', 'TJ', 'TM', 'UZ', 'UA', 'EE', 'LV', 'LT', 'GE'];
 
 async function initGeoCheck() {
     try {
-        const response = await fetch('https://ipapi.co/json/');
-        const data = await response.json();
-        const countryCode = data.country_code;
+        // Пробуем несколько API для определения геолокации
+        const apis = [
+            'https://ipapi.co/json/',
+            'https://ipwho.is/',
+            'https://ip-api.com/json/'
+        ];
+        
+        let countryCode = null;
+        
+        for (const apiUrl of apis) {
+            try {
+                const response = await fetch(apiUrl, { timeout: 5000 });
+                const data = await response.json();
+                
+                // Разные API возвращают код страны в разных полях
+                countryCode = data.country_code || data.countryCode || null;
+                
+                if (countryCode) {
+                    console.log(`Geo check: страна определена как ${countryCode} через ${apiUrl}`);
+                    break;
+                }
+            } catch (apiError) {
+                console.warn(`API ${apiUrl} не ответил:`, apiError);
+                continue;
+            }
+        }
+        
+        // Если не удалось определить страну - разрешаем доступ (для РФ и СНГ)
+        if (!countryCode) {
+            console.log('Geo check: не удалось определить страну, разрешаем доступ');
+            return;
+        }
         
         if (!CIS_COUNTRIES.includes(countryCode)) {
+            console.log(`Geo check: страна ${countryCode} не в списке разрешённых`);
             document.getElementById('geo-block').classList.remove('hidden');
             document.getElementById('main-content').classList.add('hidden');
+        } else {
+            console.log(`Geo check: страна ${countryCode} разрешена`);
         }
     } catch (error) {
         console.error('Geo check error:', error);
-        // При ошибке показываем блокировку
-        document.getElementById('geo-block').classList.remove('hidden');
-        document.getElementById('main-content').classList.add('hidden');
+        // При любой ошибке - разрешаем доступ (пользователи из РФ/СНГ не должны блокироваться)
+        console.log('Geo check: ошибка проверки, разрешаем доступ по умолчанию');
     }
 }
 
