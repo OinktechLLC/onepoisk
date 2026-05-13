@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vilak.tv — Видеобалансер</title>
+<meta name="description" content="Vilak.tv — универсальный видеобалансер. Легальный поиск фильмов и сериалов по ID Кинопоиска на YouTube, Rutube и других платформах.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0f;
+    --bg2: #141417;
+    --bg3: #1c1c21;
+    --border: #2a2a32;
+    --accent: #f5a623;
+    --accent2: #ff6b35;
+    --text: #e8e8ed;
+    --text2: #8e8e9a;
+    --player-bg: #000;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+  }
+
+  /* ===== TOP BAR ===== */
+  .topbar {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    flex-wrap: wrap;
+    position: relative;
+  }
+  .logo {
+    font-family: 'Unbounded', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+    margin-right: 6px;
+    text-decoration: none;
+  }
+  .logo span { color: var(--text2); font-weight: 400; }
+
+  .selector-btn {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: border-color .2s, background .2s;
+  }
+  .selector-btn:hover, .selector-btn.active {
+    border-color: var(--accent);
+    background: rgba(245,166,35,.08);
+  }
+  .selector-btn .arrow { color: var(--text2); font-size: 10px; }
+  .selector-btn.source-active { border-color: var(--accent); }
+
+  .topbar-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .icon-btn {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    border-radius: 8px;
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all .2s;
+    font-size: 16px;
+  }
+  .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .icon-btn.settings-active { background: var(--accent); color: #000; border-color: var(--accent); }
+
+  /* ===== PLAYER AREA ===== */
+  .player-wrap {
+    position: relative;
+    width: 100%;
+    background: #000;
+    aspect-ratio: 16/9;
+    max-height: 72vh;
+    overflow: hidden;
+  }
+  #player-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
+  }
+  .player-overlay {
+    position: absolute;
+    inset: 0;
+    background: var(--player-bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    z-index: 5;
+  }
+  .player-overlay.hidden { display: none; }
+  .vilak-logo-big {
+    font-family: 'Unbounded', sans-serif;
+    font-size: clamp(24px, 5vw, 48px);
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: -1px;
+  }
+  .vilak-logo-big span { color: #fff; opacity: .3; }
+  .overlay-hint {
+    color: var(--text2);
+    font-size: 13px;
+    text-align: center;
+    max-width: 320px;
+    line-height: 1.6;
+  }
+  .loading-spinner {
+    width: 36px; height: 36px;
+    border: 3px solid rgba(245,166,35,.2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+    display: none;
+  }
+  .loading-spinner.active { display: block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ===== BOTTOM CONTROLS ===== */
+  .player-bottom {
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .time-display {
+    color: var(--text2);
+    font-size: 12px;
+    min-width: 80px;
+    font-variant-numeric: tabular-nums;
+  }
+  .progress-bar {
+    flex: 1;
+    min-width: 100px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    cursor: pointer;
+    position: relative;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    width: 0%;
+    transition: width .3s;
+  }
+  .ctrl-btns {
+    display: flex;
+    gap: 4px;
+    margin-left: auto;
+  }
+  .ctrl-btn {
+    background: none;
+    border: none;
+    color: var(--text2);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    font-size: 18px;
+    transition: color .2s;
+    display: flex; align-items: center;
+  }
+  .ctrl-btn:hover { color: var(--accent); }
+
+  /* ===== SETTINGS PANEL (like CdnVideoHub) ===== */
+  .settings-panel {
+    position: absolute;
+    top: 50px;
+    right: 8px;
+    width: 280px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    z-index: 100;
+    display: none;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,.6);
+  }
+  .settings-panel.open { display: block; }
+  .settings-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .settings-title {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .settings-close {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .2s;
+  }
+  .settings-close:hover { background: var(--accent); color: #000; border-color: var(--accent); }
+
+  .settings-section {
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .settings-section:last-child { border-bottom: none; }
+  .settings-section-label {
+    padding: 8px 16px 4px;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text2);
+    font-weight: 500;
+  }
+  .settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    gap: 10px;
+  }
+  .settings-row-info { flex: 1; }
+  .settings-row-title { font-size: 13px; font-weight: 500; margin-bottom: 2px; }
+  .settings-row-desc { font-size: 11px; color: var(--text2); line-height: 1.4; }
+
+  /* Toggle switch */
+  .toggle {
+    position: relative;
+    width: 44px; height: 26px;
+    flex-shrink: 0;
+  }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 13px;
+    cursor: pointer;
+    transition: .3s;
+  }
+  .toggle-slider:before {
+    content: '';
+    position: absolute;
+    width: 18px; height: 18px;
+    left: 3px; top: 3px;
+    background: var(--text2);
+    border-radius: 50%;
+    transition: .3s;
+  }
+  .toggle input:checked + .toggle-slider { background: var(--accent); border-color: var(--accent); }
+  .toggle input:checked + .toggle-slider:before { transform: translateX(18px); background: #000; }
+
+  /* Active icon toggle */
+  .active-icon-btn {
+    width: 44px; height: 44px;
+    border-radius: 10px;
+    background: var(--accent);
+    border: none;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 22px;
+    color: #000;
+    transition: all .2s;
+    flex-shrink: 0;
+  }
+  .active-icon-btn:hover { transform: scale(1.05); }
+  .active-icon-btn.off {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text2);
+  }
+
+  .settings-link {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 16px;
+    color: var(--text2);
+    font-size: 12px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: color .2s;
+  }
+  .settings-link:hover { color: var(--accent); }
+
+  /* ===== SOURCES DROPDOWN ===== */
+  .sources-dropdown {
+    position: absolute;
+    top: 50px;
+    left: 0;
+    min-width: 220px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    z-index: 100;
+    display: none;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,.6);
+  }
+  .sources-dropdown.open { display: block; }
+  .source-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: background .15s;
+    border-bottom: 1px solid var(--border);
+  }
+  .source-item:last-child { border-bottom: none; }
+  .source-item:hover { background: rgba(245,166,35,.07); }
+  .source-item.selected { background: rgba(245,166,35,.12); }
+  .source-icon {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .source-icon.yt { background: #ff0000; }
+  .source-icon.rt { background: #00a8e8; }
+  .source-icon.vk { background: #0077ff; }
+  .source-icon.ok { background: #f7931e; }
+  .source-icon.mail { background: #005ff9; }
+  .source-icon.kp { background: #ff6600; }
+  .source-info { flex: 1; }
+  .source-name { font-size: 13px; font-weight: 500; }
+  .source-status { font-size: 11px; color: var(--text2); margin-top: 1px; }
+  .source-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #555;
+    flex-shrink: 0;
+  }
+  .source-dot.ok-dot { background: #4caf50; }
+  .source-dot.searching { background: var(--accent); animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+
+  /* ===== SEASON/EPISODE PANEL ===== */
+  .episodes-panel {
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    display: none;
+    max-height: 220px;
+    overflow-y: auto;
+  }
+  .episodes-panel.open { display: block; }
+  .seasons-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 10px 14px;
+    overflow-x: auto;
+    border-bottom: 1px solid var(--border);
+  }
+  .season-tab {
+    padding: 5px 14px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    white-space: nowrap;
+    transition: all .2s;
+  }
+  .season-tab:hover, .season-tab.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #000;
+  }
+  .episodes-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 10px 14px;
+  }
+  .ep-btn {
+    padding: 5px 10px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all .2s;
+  }
+  .ep-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .ep-btn.active { background: var(--accent); border-color: var(--accent); color: #000; }
+
+  /* ===== STATUS BAR ===== */
+  .status-bar {
+    background: var(--bg);
+    border-top: 1px solid var(--border);
+    padding: 6px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--text2);
+  }
+  .status-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 1.5s infinite;
+  }
+  .status-dot.idle { background: #555; animation: none; }
+  .status-dot.error { background: #f44336; animation: none; }
+
+  /* ===== FOOTER ===== */
+  .footer {
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .footer-logo {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .footer-links {
+    display: flex;
+    gap: 14px;
+  }
+  .footer-links a {
+    color: var(--text2);
+    font-size: 11px;
+    text-decoration: none;
+    transition: color .2s;
+  }
+  .footer-links a:hover { color: var(--accent); }
+  .footer-made {
+    font-size: 10px;
+    color: var(--text2);
+    opacity: .5;
+  }
+
+  /* ===== MAIN WRAPPER ===== */
+  .player-container {
+    position: relative;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  /* ===== SCROLLBAR ===== */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+  @media (max-width: 480px) {
+    .topbar { padding: 6px 10px; gap: 6px; }
+    .selector-btn { padding: 5px 9px; font-size: 12px; }
+    .settings-panel { width: calc(100vw - 16px); right: 8px; }
+    .sources-dropdown { width: calc(100vw - 16px); }
+  }
+</style>
+</head>
+<body>
+
+<div class="player-container" id="app">
+
+  <!-- TOP BAR -->
+  <div class="topbar" id="topbar">
+    <a class="logo" href="/">Vilak<span>.tv</span></a>
+
+    <!-- Season selector (for serials) -->
+    <button class="selector-btn" id="btnSeason" style="display:none" onclick="togglePanel('season')">
+      <span id="lblSeason">Сезон 1</span>
+      <span class="arrow">▾</span>
+    </button>
+
+    <!-- Episode selector (for serials) -->
+    <button class="selector-btn" id="btnEpisode" style="display:none" onclick="togglePanel('season')">
+      <span id="lblEpisode">Эпизод 1</span>
+      <span class="arrow">▾</span>
+    </button>
+
+    <!-- Source selector -->
+    <button class="selector-btn source-active" id="btnSource" onclick="togglePanel('sources')">
+      <span id="lblSource">🔍 Поиск источников...</span>
+      <span class="arrow">▾</span>
+    </button>
+
+    <div class="topbar-right">
+      <!-- PIP / fullscreen extras -->
+      <button class="icon-btn" id="btnPip" onclick="togglePip()" title="Картинка в картинке">⧉</button>
+      <!-- Settings -->
+      <button class="icon-btn" id="btnSettings" onclick="togglePanel('settings')">⚙</button>
+    </div>
+
+    <!-- SOURCES DROPDOWN -->
+    <div class="sources-dropdown" id="panelSources">
+      <!-- dynamically filled -->
+    </div>
+
+    <!-- SETTINGS PANEL -->
+    <div class="settings-panel" id="panelSettings">
+      <div class="settings-header">
+        <span class="settings-title">Настройки</span>
+        <button class="settings-close" onclick="togglePanel('settings')">✕</button>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-label">Обновление</div>
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-row-title">Автопереключение серии</div>
+            <div class="settings-row-desc">Автоматически переходить к следующей серии</div>
+          </div>
+          <button class="active-icon-btn" id="btnAutoNext" onclick="toggleAutoNext()">↻</button>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-row-title">Автопропуск заставок</div>
+            <div class="settings-row-desc">Автоматически пропускать вступление и концовку</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="cbSkipIntro">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-label">Качество</div>
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-row-title">Автокачество</div>
+            <div class="settings-row-desc">Подбирать качество по скорости соединения</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="cbAutoQuality" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-label">Поиск</div>
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-row-title">Трейлеры</div>
+            <div class="settings-row-desc">Искать трейлеры если основной контент недоступен</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="cbTrailers" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-row-title">Автосмена источника</div>
+            <div class="settings-row-desc">При ошибке переключаться на следующий источник</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="cbAutoSwitch" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <a class="settings-link" href="/docs/terms.html" target="_blank">
+          🏳 Условия использования
+        </a>
+        <a class="settings-link" href="/docs/privacy.html" target="_blank">
+          🔒 Политика конфиденциальности
+        </a>
+        <a class="settings-link" href="/docs/embed.html" target="_blank">
+          🔌 Как встроить на сайт
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLAYER AREA -->
+  <div class="player-wrap" id="playerWrap">
+    <iframe id="player-iframe" allowfullscreen allow="autoplay; fullscreen; picture-in-picture" sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"></iframe>
+
+    <div class="player-overlay" id="playerOverlay">
+      <div class="vilak-logo-big">Vilak<span>.tv</span></div>
+      <div class="loading-spinner" id="spinner"></div>
+      <div class="overlay-hint" id="overlayHint">
+        Передайте ID Кинопоиска через URL:<br>
+        <code style="color:var(--accent); font-size:12px;">vilak.tv/<b>123456</b></code>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM CONTROLS (placeholder — real controls inside iframe) -->
+  <div class="player-bottom" style="display:none" id="playerBottom">
+    <span class="time-display" id="timeDisplay">00:00 / 00:00</span>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="ctrl-btns">
+      <button class="ctrl-btn" title="Звук">🔊</button>
+      <button class="ctrl-btn" onclick="document.getElementById('player-iframe').requestFullscreen()">⛶</button>
+    </div>
+  </div>
+
+  <!-- EPISODES PANEL -->
+  <div class="episodes-panel" id="panelSeason">
+    <div class="seasons-tabs" id="seasonsTabs"></div>
+    <div class="episodes-grid" id="episodesGrid"></div>
+  </div>
+
+  <!-- STATUS BAR -->
+  <div class="status-bar">
+    <div class="status-dot idle" id="statusDot"></div>
+    <span id="statusText">Ожидание ID Кинопоиска...</span>
+    <span style="margin-left:auto; opacity:.4">vilak.tv</span>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <a class="footer-logo" href="/">Vilak.tv</a>
+    <div class="footer-links">
+      <a href="/docs/terms.html">Условия</a>
+      <a href="/docs/privacy.html">Конфиденциальность</a>
+      <a href="/docs/embed.html">Embed</a>
+      <a href="/docs/api.html">API</a>
+    </div>
+    <div class="footer-made">Сделано с ❤ для KinoplayerTop</div>
+  </div>
+
+</div>
+
+<script src="vilak.js"></script>
+<script>
+  // Auto-init from URL
+  window.addEventListener('load', () => {
+    const path = location.pathname.replace(/\//g, '');
+    const hash = location.hash.replace('#', '');
+    const kpid = path || hash;
+    if (/^\d{4,8}$/.test(kpid)) {
+      VilakPlayer.init(kpid);
+    }
+    // also support ?id=
+    const params = new URLSearchParams(location.search);
+    if (params.get('id')) VilakPlayer.init(params.get('id'));
+  });
+</script>
+</body>
+</html>

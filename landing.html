@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vilak.tv — Универсальный видеобалансер</title>
+<meta name="description" content="Vilak.tv — легальный универсальный видеобалансер. Поисковой робот ищет фильмы и сериалы на YouTube, Rutube, VK Video по ID Кинопоиска.">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #08080a;
+  --bg2: #111114;
+  --bg3: #18181d;
+  --border: #252529;
+  --accent: #f5a623;
+  --accent2: #ff6b35;
+  --text: #ececf1;
+  --text2: #7c7c8a;
+  --radius: 12px;
+  --glow: 0 0 40px rgba(245,166,35,.2);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* NAV */
+nav {
+  position: fixed; top: 0; width: 100%; z-index: 100;
+  background: rgba(8,8,10,.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  height: 60px;
+  display: flex; align-items: center; gap: 24px;
+}
+.nav-logo {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 700; font-size: 18px;
+  color: var(--accent);
+  text-decoration: none;
+}
+.nav-logo span { color: var(--text2); }
+.nav-links { display: flex; gap: 20px; margin-left: auto; }
+.nav-links a {
+  color: var(--text2); font-size: 13px; text-decoration: none;
+  transition: color .2s;
+}
+.nav-links a:hover { color: var(--accent); }
+.nav-cta {
+  background: var(--accent); color: #000;
+  padding: 8px 18px; border-radius: 8px;
+  font-size: 13px; font-weight: 600;
+  text-decoration: none;
+  transition: transform .2s, box-shadow .2s;
+}
+.nav-cta:hover { transform: translateY(-1px); box-shadow: var(--glow); }
+
+/* HERO */
+.hero {
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center;
+  padding: 80px 24px 60px;
+  position: relative;
+  overflow: hidden;
+}
+.hero-bg {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% 40%, rgba(245,166,35,.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(245,166,35,.1); border: 1px solid rgba(245,166,35,.25);
+  border-radius: 20px; padding: 6px 14px;
+  font-size: 12px; color: var(--accent); font-weight: 500;
+  margin-bottom: 24px;
+  animation: fadeUp .6s ease both;
+}
+.hero h1 {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 900;
+  font-size: clamp(36px, 8vw, 80px);
+  line-height: 1.05;
+  letter-spacing: -2px;
+  margin-bottom: 16px;
+  animation: fadeUp .6s .1s ease both;
+}
+.hero h1 .accent { color: var(--accent); }
+.hero h1 .dim { color: var(--text2); }
+.hero-sub {
+  font-size: clamp(15px, 2.5vw, 18px);
+  color: var(--text2);
+  max-width: 600px;
+  margin: 0 auto 40px;
+  animation: fadeUp .6s .2s ease both;
+}
+.hero-actions {
+  display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;
+  animation: fadeUp .6s .3s ease both;
+}
+.btn-primary {
+  background: var(--accent); color: #000;
+  padding: 14px 28px; border-radius: 10px;
+  font-weight: 700; font-size: 15px;
+  text-decoration: none;
+  transition: transform .2s, box-shadow .2s;
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: var(--glow); }
+.btn-secondary {
+  background: var(--bg3); color: var(--text);
+  border: 1px solid var(--border);
+  padding: 14px 28px; border-radius: 10px;
+  font-size: 15px; text-decoration: none;
+  transition: border-color .2s;
+}
+.btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+/* DEMO PLAYER */
+.hero-demo {
+  margin-top: 60px;
+  width: 100%; max-width: 800px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  box-shadow: 0 30px 80px rgba(0,0,0,.6), var(--glow);
+  animation: fadeUp .8s .4s ease both;
+}
+.demo-topbar {
+  background: var(--bg2);
+  padding: 10px 14px;
+  display: flex; align-items: center; gap: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.demo-dot { width: 10px; height: 10px; border-radius: 50%; }
+.demo-screen {
+  background: #000;
+  aspect-ratio: 16/9;
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+.demo-screen-gradient {
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(245,166,35,.05) 0%, transparent 60%);
+}
+.demo-play {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: rgba(245,166,35,.15);
+  border: 2px solid rgba(245,166,35,.4);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; cursor: pointer;
+  transition: all .2s; z-index: 1;
+}
+.demo-play:hover { background: var(--accent); color: #000; transform: scale(1.1); }
+.demo-url {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 6px; padding: 6px 12px;
+  font-size: 12px; color: var(--text2);
+  font-family: monospace; flex: 1;
+}
+.demo-url .hl { color: var(--accent); }
+
+/* HOW IT WORKS */
+.section {
+  padding: 80px 24px;
+  max-width: 1100px; margin: 0 auto;
+}
+.section-badge {
+  font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--accent); font-weight: 600; margin-bottom: 12px;
+}
+.section-title {
+  font-family: 'Unbounded', sans-serif;
+  font-size: clamp(24px, 4vw, 42px);
+  font-weight: 700;
+  letter-spacing: -1px;
+  margin-bottom: 16px;
+}
+.section-sub { color: var(--text2); max-width: 500px; margin-bottom: 48px; font-size: 15px; }
+
+.steps-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+}
+.step-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 24px;
+  transition: border-color .3s, transform .3s;
+  position: relative; overflow: hidden;
+}
+.step-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 2px; background: linear-gradient(90deg, var(--accent), transparent);
+  opacity: 0; transition: opacity .3s;
+}
+.step-card:hover { border-color: var(--accent); transform: translateY(-3px); }
+.step-card:hover::before { opacity: 1; }
+.step-num {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 36px; font-weight: 900;
+  color: rgba(245,166,35,.15); margin-bottom: 12px;
+}
+.step-title { font-weight: 600; font-size: 15px; margin-bottom: 6px; }
+.step-desc { color: var(--text2); font-size: 13px; line-height: 1.6; }
+
+/* SOURCES GRID */
+.sources-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px; margin-top: 40px;
+}
+.source-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px;
+  display: flex; align-items: center; gap: 14px;
+  transition: border-color .2s;
+}
+.source-card:hover { border-color: var(--accent); }
+.src-ico {
+  width: 40px; height: 40px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 700; flex-shrink: 0;
+}
+.src-name { font-weight: 600; font-size: 14px; }
+.src-type { font-size: 11px; color: var(--text2); margin-top: 2px; }
+.src-badge {
+  margin-left: auto; font-size: 10px; padding: 2px 8px;
+  border-radius: 4px; background: rgba(76,175,80,.15);
+  border: 1px solid rgba(76,175,80,.3); color: #4caf50;
+}
+
+/* CODE BLOCK */
+.code-block {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden; margin-top: 20px;
+}
+.code-header {
+  background: var(--bg3); border-bottom: 1px solid var(--border);
+  padding: 10px 16px; display: flex; align-items: center; justify-content: space-between;
+  font-size: 12px; color: var(--text2);
+}
+.code-copy {
+  background: none; border: 1px solid var(--border);
+  color: var(--text2); padding: 4px 10px; border-radius: 5px;
+  cursor: pointer; font-size: 11px; transition: all .2s;
+}
+.code-copy:hover { border-color: var(--accent); color: var(--accent); }
+.code-body {
+  padding: 16px;
+  font-family: 'Courier New', monospace;
+  font-size: 13px; line-height: 1.7;
+  color: #cdd6f4;
+  overflow-x: auto;
+  white-space: pre;
+}
+.code-body .kw { color: #cba6f7; }
+.code-body .str { color: #a6e3a1; }
+.code-body .cm { color: var(--text2); }
+.code-body .fn { color: #89dceb; }
+.code-body .num { color: #fab387; }
+
+/* FEATURES GRID */
+.features-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+.feature-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 24px;
+}
+.feature-icon { font-size: 28px; margin-bottom: 12px; }
+.feature-title { font-weight: 600; font-size: 15px; margin-bottom: 6px; }
+.feature-desc { color: var(--text2); font-size: 13px; line-height: 1.6; }
+
+/* FOOTER */
+footer {
+  background: var(--bg2); border-top: 1px solid var(--border);
+  padding: 40px 24px;
+}
+.footer-inner {
+  max-width: 1100px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 20px;
+}
+.footer-logo {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 700; font-size: 16px; color: var(--accent);
+}
+.footer-links { display: flex; gap: 20px; flex-wrap: wrap; }
+.footer-links a {
+  color: var(--text2); font-size: 13px; text-decoration: none;
+  transition: color .2s;
+}
+.footer-links a:hover { color: var(--accent); }
+.footer-copy { color: var(--text2); font-size: 12px; opacity: .5; width: 100%; text-align: center; margin-top: 20px; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 600px) {
+  .nav-links { display: none; }
+  .hero h1 { letter-spacing: -1px; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="/">Vilak<span>.tv</span></a>
+  <div class="nav-links">
+    <a href="#how">Как работает</a>
+    <a href="#sources">Источники</a>
+    <a href="docs/embed.html">Embed</a>
+    <a href="docs/api.html">API</a>
+  </div>
+  <a class="nav-cta" href="/301">▶ Демо</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-badge">🤖 Поисковой робот · Легальные источники · Без пиратства</div>
+  <h1>
+    <span class="dim">Универсальный</span><br>
+    <span class="accent">Видеобалансер</span>
+  </h1>
+  <p class="hero-sub">
+    Vilak.tv автоматически находит фильмы и сериалы по ID Кинопоиска
+    на YouTube, Rutube, VK Video и других легальных платформах.
+    Один URL — все источники.
+  </p>
+  <div class="hero-actions">
+    <a class="btn-primary" href="/301">▶ Попробовать</a>
+    <a class="btn-secondary" href="docs/embed.html">Встроить на сайт</a>
+  </div>
+
+  <div class="hero-demo">
+    <div class="demo-topbar">
+      <div class="demo-dot" style="background:#ff5f57"></div>
+      <div class="demo-dot" style="background:#febc2e"></div>
+      <div class="demo-dot" style="background:#28c840"></div>
+      <div class="demo-url">vilak.tv/<span class="hl">301</span></div>
+    </div>
+    <div class="demo-screen">
+      <div class="demo-screen-gradient"></div>
+      <a class="demo-play" href="/301">▶</a>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section" id="how">
+  <div class="section-badge">Принцип работы</div>
+  <h2 class="section-title">Как работает Vilak.tv</h2>
+  <p class="section-sub">Поисковой робот за секунды находит контент на легальных платформах по ID из Кинопоиска.</p>
+
+  <div class="steps-grid">
+    <div class="step-card">
+      <div class="step-num">01</div>
+      <div class="step-title">Передайте ID</div>
+      <div class="step-desc">Укажите ID Кинопоиска в URL: <code style="color:var(--accent)">vilak.tv/123456</code> — это всё, что нужно.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">02</div>
+      <div class="step-title">Робот ищет</div>
+      <div class="step-desc">Поисковой робот параллельно ищет контент на YouTube, Rutube, VK Video и других легальных платформах.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">03</div>
+      <div class="step-title">Лучший источник</div>
+      <div class="step-desc">Автоматически выбирается наиболее качественный и доступный источник. Вы можете сменить источник вручную.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">04</div>
+      <div class="step-title">Смотрите</div>
+      <div class="step-desc">Плеер загружает видео. Если источник недоступен — автоматически переключается на следующий.</div>
+    </div>
+  </div>
+</section>
+
+<!-- SOURCES -->
+<section class="section" id="sources" style="padding-top:0">
+  <div class="section-badge">Источники</div>
+  <h2 class="section-title">Только легальные платформы</h2>
+  <p class="section-sub">Vilak.tv не хранит и не пиратит контент. Все видео берутся с официальных платформ.</p>
+
+  <div class="sources-grid">
+    <div class="source-card">
+      <div class="src-ico" style="background:#ff0000">▶</div>
+      <div>
+        <div class="src-name">YouTube</div>
+        <div class="src-type">Фильмы, трейлеры, официальный контент</div>
+      </div>
+      <span class="src-badge">✓ Активен</span>
+    </div>
+    <div class="source-card">
+      <div class="src-ico" style="background:#00a8e8">▶</div>
+      <div>
+        <div class="src-name">Rutube</div>
+        <div class="src-type">Российские фильмы и сериалы</div>
+      </div>
+      <span class="src-badge">✓ Активен</span>
+    </div>
+    <div class="source-card">
+      <div class="src-ico" style="background:#0077ff">▶</div>
+      <div>
+        <div class="src-name">VK Видео</div>
+        <div class="src-type">Официальные каналы и сериалы</div>
+      </div>
+      <span class="src-badge">✓ Активен</span>
+    </div>
+    <div class="source-card">
+      <div class="src-ico" style="background:#f7931e">▶</div>
+      <div>
+        <div class="src-name">OK Видео</div>
+        <div class="src-type">Одноклассники — официальный контент</div>
+      </div>
+      <span class="src-badge">✓ Активен</span>
+    </div>
+  </div>
+</section>
+
+<!-- EMBED -->
+<section class="section" id="embed" style="padding-top:0">
+  <div class="section-badge">Интеграция</div>
+  <h2 class="section-title">Легко встроить на любой сайт</h2>
+  <p class="section-sub">Три способа интеграции: JS-скрипт, iframe или data-атрибуты. Работает за 30 секунд.</p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Способ 1 — vilak-embed.js (рекомендуется)</span>
+      <button class="code-copy" onclick="copyCode(this, 'code1')">Копировать</button>
+    </div>
+    <div class="code-body" id="code1"><span class="cm">&lt;!-- Добавьте контейнер --&gt;</span>
+&lt;<span class="kw">div</span> <span class="fn">id</span>=<span class="str">"vilak-player"</span>&gt;&lt;/<span class="kw">div</span>&gt;
+
+<span class="cm">&lt;!-- Подключите скрипт --&gt;</span>
+&lt;<span class="kw">script</span> <span class="fn">src</span>=<span class="str">"https://vilak.tv/vilak-embed.js"</span>&gt;&lt;/<span class="kw">script</span>&gt;
+&lt;<span class="kw">script</span>&gt;
+  <span class="fn">Vilak</span>(<span class="str">'#vilak-player'</span>, { kpId: <span class="num">301</span> });
+&lt;/<span class="kw">script</span>&gt;</div>
+  </div>
+
+  <div class="code-block" style="margin-top:14px">
+    <div class="code-header">
+      <span>Способ 2 — iframe</span>
+      <button class="code-copy" onclick="copyCode(this, 'code2')">Копировать</button>
+    </div>
+    <div class="code-body" id="code2">&lt;<span class="kw">iframe</span>
+  <span class="fn">src</span>=<span class="str">"https://vilak.tv/301"</span>
+  <span class="fn">width</span>=<span class="str">"100%"</span>
+  <span class="fn">height</span>=<span class="str">"500"</span>
+  <span class="fn">frameborder</span>=<span class="str">"0"</span>
+  <span class="fn">allowfullscreen</span>
+  <span class="fn">allow</span>=<span class="str">"autoplay; fullscreen"</span>
+&gt;&lt;/<span class="kw">iframe</span>&gt;</div>
+  </div>
+
+  <div class="code-block" style="margin-top:14px">
+    <div class="code-header">
+      <span>Способ 3 — data-атрибуты (авто)</span>
+      <button class="code-copy" onclick="copyCode(this, 'code3')">Копировать</button>
+    </div>
+    <div class="code-body" id="code3"><span class="cm">&lt;!-- Разметка --&gt;</span>
+&lt;<span class="kw">div</span> <span class="fn">class</span>=<span class="str">"vilak-auto"</span> <span class="fn">data-kpid</span>=<span class="str">"301"</span>&gt;&lt;/<span class="kw">div</span>&gt;
+
+<span class="cm">&lt;!-- Один скрипт в конце страницы --&gt;</span>
+&lt;<span class="kw">script</span> <span class="fn">src</span>=<span class="str">"https://vilak.tv/vilak-embed.js"</span> <span class="fn">async</span>&gt;&lt;/<span class="kw">script</span>&gt;</div>
+  </div>
+
+  <div style="margin-top:16px; text-align:center;">
+    <a class="btn-secondary" href="docs/embed.html" style="display:inline-block; font-size:13px; padding:10px 20px;">Полная документация →</a>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="section" style="padding-top:0">
+  <div class="section-badge">Возможности</div>
+  <h2 class="section-title">Всё что нужно балансеру</h2>
+
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">🤖</div>
+      <div class="feature-title">Поисковой робот</div>
+      <div class="feature-desc">Автоматически ищет контент на всех платформах параллельно и выбирает лучший источник.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔄</div>
+      <div class="feature-title">Автосмена источника</div>
+      <div class="feature-desc">При недоступности источника автоматически переключается на следующий.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📺</div>
+      <div class="feature-title">Сериалы с сезонами</div>
+      <div class="feature-desc">Полная поддержка многосезонных сериалов с удобным выбором сезона и серии.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🎬</div>
+      <div class="feature-title">Трейлеры</div>
+      <div class="feature-desc">Если полный фильм недоступен — автоматически ищет официальный трейлер.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⚡</div>
+      <div class="feature-title">Мгновенная загрузка</div>
+      <div class="feature-desc">Параллельный поиск по всем источникам обеспечивает минимальное время ожидания.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔌</div>
+      <div class="feature-title">Простая интеграция</div>
+      <div class="feature-desc">Один тег <code style="color:var(--accent)">&lt;script&gt;</code> или <code style="color:var(--accent)">&lt;iframe&gt;</code> — и балансер готов к работе на вашем сайте.</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-logo">Vilak.tv</div>
+    <div class="footer-links">
+      <a href="docs/terms.html">Условия использования</a>
+      <a href="docs/privacy.html">Конфиденциальность</a>
+      <a href="docs/embed.html">Embed</a>
+      <a href="docs/api.html">API</a>
+    </div>
+    <div class="footer-copy">
+      Сделано с ❤ для KinoplayerTop · Vilak.tv собирает только с легальных платформ · © 2024 Vilak.tv
+    </div>
+  </div>
+</footer>
+
+<script>
+function copyCode(btn, id) {
+  const el = document.getElementById(id);
+  const text = el.innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✓ Скопировано';
+    setTimeout(() => btn.textContent = 'Копировать', 2000);
+  });
+}
+</script>
+</body>
+</html>
