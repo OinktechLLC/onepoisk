@@ -72,13 +72,25 @@
   /* ============================================================
    *  YOUTUBE SEARCH  (легальный публичный поиск)
    * ============================================================ */
-  async function searchYouTube(kpId, title, type, season, episode) {
+  async function searchYouTube(kpId, title, type, season, episode, isTrailer = false) {
     // Строим поисковой запрос
     let query = title || `kinopoisk ${kpId}`;
-    if (type === 'serial' && season && episode) {
-      query += ` сезон ${season} серия ${episode}`;
+    
+    if (isTrailer) {
+      // Поиск трейлера
+      query += ' официальный трейлер';
+    } else if (type === 'serial' && season && episode) {
+      // Поиск конкретной серии сериала
+      query += ` ${season} сезон ${episode} серия смотреть онлайн`;
+    } else if (type === 'serial') {
+      // Поиск сериала без указания серии
+      query += ` сериал смотреть онлайн`;
+    } else {
+      // Поиск фильма
+      query += ' фильм смотреть онлайн';
     }
-    query += ' официально смотреть онлайн';
+    
+    query += ' официально';
 
     // Используем YouTube Data API v3 (публичный ключ не нужен для iframe search)
     // Фолбэк: строим iframe embed через поиск по oEmbed / nocookie
@@ -93,22 +105,33 @@
   /* ============================================================
    *  RUTUBE SEARCH
    * ============================================================ */
-  async function searchRutube(kpId, title, type, season, episode) {
+  async function searchRutube(kpId, title, type, season, episode, isTrailer = false) {
     let query = title || `kinopoisk ${kpId}`;
-    if (type === 'serial' && season && episode) {
+    
+    if (isTrailer) {
+      // Поиск трейлера
+      query += ' официальный трейлер';
+    } else if (type === 'serial' && season && episode) {
+      // Поиск конкретной серии
       query += ` ${season} сезон ${episode} серия`;
+    } else if (type === 'serial') {
+      // Поиск сериала
+      query += ' сериал';
+    } else {
+      // Поиск фильма
+      query += ' фильм';
     }
+    
     // Rutube Public API search
-    const apiUrl = `https://rutube.ru/api/search/video/?query=${encodeURIComponent(query)}&format=json&origin__type=yt`;
+    const apiUrl = `https://rutube.ru/api/search/video/?query=${encodeURIComponent(query)}&format=json`;
     try {
       const resp = await fetch(apiUrl, { signal: AbortSignal.timeout(5000) });
       if (!resp.ok) throw new Error('rutube api fail');
       const data = await resp.json();
       const results = data.results || [];
-      // Фильтруем — ищем официальный контент
+      // Фильтруем — ищем релевантный контент
       const item = results.find(r =>
-        r.title && (r.is_official || r.author?.is_official) &&
-        !r.is_age_restricted
+        r.title && !r.is_age_restricted
       ) || results[0];
       if (!item) return { found: false };
       const embedId = item.id;
@@ -128,11 +151,23 @@
   /* ============================================================
    *  VK VIDEO SEARCH
    * ============================================================ */
-  async function searchVkVideo(kpId, title, type, season, episode) {
+  async function searchVkVideo(kpId, title, type, season, episode, isTrailer = false) {
     let query = title || `kinopoisk ${kpId}`;
-    if (type === 'serial' && season && episode) {
-      query += ` сезон ${season} серия ${episode}`;
+    
+    if (isTrailer) {
+      // Поиск трейлера
+      query += ' официальный трейлер';
+    } else if (type === 'serial' && season && episode) {
+      // Поиск конкретной серии
+      query += ` ${season} сезон ${episode} серия`;
+    } else if (type === 'serial') {
+      // Поиск сериала
+      query += ' сериал';
+    } else {
+      // Поиск фильма
+      query += ' фильм';
     }
+    
     // VK Video embed search
     const embedUrl = `https://vk.com/video_ext.php?id=search&q=${encodeURIComponent(query)}&hd=1`;
     return { found: true, url: embedUrl, fallback: true };
@@ -145,11 +180,23 @@
   /* ============================================================
    *  OK VIDEO SEARCH
    * ============================================================ */
-  async function searchOkVideo(kpId, title, type, season, episode) {
+  async function searchOkVideo(kpId, title, type, season, episode, isTrailer = false) {
     let query = title || `kinopoisk ${kpId}`;
-    if (type === 'serial' && season && episode) {
-      query += ` сезон ${season} серия ${episode}`;
+    
+    if (isTrailer) {
+      // Поиск трейлера
+      query += ' официальный трейлер';
+    } else if (type === 'serial' && season && episode) {
+      // Поиск конкретной серии
+      query += ` ${season} сезон ${episode} серия`;
+    } else if (type === 'serial') {
+      // Поиск сериала
+      query += ' сериал';
+    } else {
+      // Поиск фильма
+      query += ' фильм';
     }
+    
     const embedUrl = `https://ok.ru/videoembed/search?q=${encodeURIComponent(query)}`;
     return { found: true, url: embedUrl, fallback: true };
   }
@@ -215,7 +262,7 @@
 
     const searchPromises = sourcesToSearch.map(async (src) => {
       try {
-        const res = await src.search(kpId, title || `ID ${kpId}`, contentType, season, episode);
+        const res = await src.search(kpId, title || `ID ${kpId}`, contentType, season, episode, false);
         state.sourceResults[src.id] = res;
         updateSourceItem(src.id, res.found ? 'found' : 'notfound');
         return { src, res };
@@ -256,10 +303,34 @@
   }
 
   async function searchTrailer(kpId, title) {
+    // Ищем трейлер на всех платформах параллельно
+    const trailerPromises = SOURCES.map(async (src) => {
+      try {
+        const res = await src.search(kpId, title || `ID ${kpId}`, state.type, state.season, state.episode, true);
+        return { src, res };
+      } catch (e) {
+        return { src, res: { found: false } };
+      }
+    });
+    
+    const trailerResults = await Promise.allSettled(trailerPromises);
+    
+    // Выбираем первый найденный трейлер по приоритету
+    for (const result of trailerResults) {
+      if (result.status === 'fulfilled' && result.value.res.found) {
+        const { src, res } = result.value;
+        const embedUrl = src.embed(res);
+        loadIframe(embedUrl);
+        setStatus('ok', `🎬 Трейлер загружен из ${src.name}`);
+        document.getElementById('lblSource').textContent = `▶ ${src.name} (трейлер)`;
+        return;
+      }
+    }
+    
+    // Фолбэк на YouTube если ничего не найдено
     const query = (title || `kinopoisk ${kpId}`) + ' официальный трейлер';
     const embedUrl = `https://www.youtube-nocookie.com/embed?listType=search&list=${encodeURIComponent(query)}&autoplay=0`;
-    const iframeSrc = embedUrl;
-    loadIframe(iframeSrc);
+    loadIframe(embedUrl);
     setStatus('ok', '🎬 Трейлер загружен из YouTube');
     document.getElementById('lblSource').textContent = '▶ YouTube (трейлер)';
   }
