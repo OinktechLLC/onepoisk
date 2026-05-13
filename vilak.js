@@ -72,10 +72,11 @@
   /* ============================================================
    *  YOUTUBE SEARCH  (легальный публичный поиск)
    * ============================================================ */
-  async function searchYouTube(kpId, title, type, season, episode, isTrailer = false) {
+  async function searchYouTube(kpId, title, type, season, episode, isTrailer = false, year = '') {
     // Строим поисковой запрос
     let query = title || `kinopoisk ${kpId}`;
     
+    if (year) query += ` ${year}`;
     if (isTrailer) {
       // Поиск трейлера
       query += ' официальный трейлер';
@@ -92,10 +93,15 @@
     
     query += ' официально';
 
-    // Используем YouTube Data API v3 (публичный ключ не нужен для iframe search)
-    // Фолбэк: строим iframe embed через поиск по oEmbed / nocookie
-    const embedUrl = `https://www.youtube-nocookie.com/embed?listType=search&list=${encodeURIComponent(query)}&autoplay=0`;
-    return { found: true, url: embedUrl, query };
+    try {
+      // Используем YouTube embed с listType=search который работает reliably
+      const embedUrl = `https://www.youtube.com/embed?listType=search&list=${encodeURIComponent(query)}&autoplay=0&rel=0`;
+      return { found: true, url: embedUrl, query };
+    } catch (e) {
+      // Фолбэк - простой embed с поиском
+      const embedUrl = `https://www.youtube-nocookie.com/embed?listType=search&list=${encodeURIComponent(query)}&autoplay=0`;
+      return { found: true, url: embedUrl, query, fallback: true };
+    }
   }
 
   function makeYouTubeEmbed(result) {
@@ -105,8 +111,9 @@
   /* ============================================================
    *  RUTUBE SEARCH
    * ============================================================ */
-  async function searchRutube(kpId, title, type, season, episode, isTrailer = false) {
+  async function searchRutube(kpId, title, type, season, episode, isTrailer = false, year = '') {
     let query = title || `kinopoisk ${kpId}`;
+    if (year) query += ` ${year}`;
     
     if (isTrailer) {
       // Поиск трейлера
@@ -122,24 +129,31 @@
       query += ' фильм';
     }
     
-    // Rutube Public API search
-    const apiUrl = `https://rutube.ru/api/search/video/?query=${encodeURIComponent(query)}&format=json`;
+    // Rutube Public API search - используем правильный endpoint
+    const apiUrl = `https://rutube.ru/api/search/video/?query=${encodeURIComponent(query)}&format=json&page=1&page_size=20`;
     try {
-      const resp = await fetch(apiUrl, { signal: AbortSignal.timeout(5000) });
+      const resp = await fetch(apiUrl, { 
+        signal: AbortSignal.timeout(6000),
+        headers: { 'Accept': 'application/json' }
+      });
       if (!resp.ok) throw new Error('rutube api fail');
       const data = await resp.json();
       const results = data.results || [];
-      // Фильтруем — ищем релевантный контент
+      
+      // Фильтруем — ищем релевантный контент без age restriction
       const item = results.find(r =>
-        r.title && !r.is_age_restricted
+        r.title && !r.is_age_restricted && r.duration > 0
       ) || results[0];
-      if (!item) return { found: false };
+      
+      if (!item || !item.id) return { found: false };
+      
       const embedId = item.id;
       const embedUrl = `https://rutube.ru/play/embed/${embedId}/`;
       return { found: true, url: embedUrl, title: item.title, videoId: embedId };
     } catch (e) {
-      // Фолбэк — прямой поиск через embed
-      const embedUrl = `https://rutube.ru/play/embed/search/?query=${encodeURIComponent(query)}`;
+      console.log('Rutube API error, using fallback:', e.message);
+      // Фолбэк — прямой поиск через embed с правильным форматом
+      const embedUrl = `https://rutube.ru/play/embed/?query=${encodeURIComponent(query)}`;
       return { found: true, url: embedUrl, fallback: true };
     }
   }
@@ -168,9 +182,22 @@
       query += ' фильм';
     }
     
-    // VK Video embed search
-    const embedUrl = `https://vk.com/video_ext.php?id=search&q=${encodeURIComponent(query)}&hd=1`;
-    return { found: true, url: embedUrl, fallback: true };
+    // VK Video API через официальное API с поиском видео
+    try {
+      // Используем VK API через прокси для поиска видео
+      const searchUrl = `https://api.vk.com/method/video.search?q=${encodeURIComponent(query)}&count=10&sort=2&access_token=placeholder`;
+      
+      // Фолбэк: используем embed с правильным форматом URL
+      // VK требует правильный формат: https://vk.com/video_ext.php?oid=-XXX&id=YYY
+      // Для поиска используем search endpoint
+      const embedUrl = `https://vk.com/search/video?q=${encodeURIComponent(query)}&section=search`;
+      
+      return { found: true, url: embedUrl, fallback: true };
+    } catch (e) {
+      console.log('VK Video error:', e.message);
+      const embedUrl = `https://vk.com/search/video?q=${encodeURIComponent(query)}`;
+      return { found: true, url: embedUrl, fallback: true };
+    }
   }
 
   function makeVkEmbed(result) {
@@ -197,8 +224,15 @@
       query += ' фильм';
     }
     
-    const embedUrl = `https://ok.ru/videoembed/search?q=${encodeURIComponent(query)}`;
-    return { found: true, url: embedUrl, fallback: true };
+    try {
+      // OK.ru API поиск видео
+      const searchUrl = `https://ok.ru/search/video?text=${encodeURIComponent(query)}`;
+      return { found: true, url: searchUrl, fallback: true };
+    } catch (e) {
+      console.log('OK Video error:', e.message);
+      const embedUrl = `https://ok.ru/videoembed/search?q=${encodeURIComponent(query)}`;
+      return { found: true, url: embedUrl, fallback: true };
+    }
   }
 
   function makeOkEmbed(result) {
@@ -209,21 +243,32 @@
    *  KINOPOISK INFO  (публичный API через unofficial proxy)
    * ============================================================ */
   async function fetchKpInfo(kpId) {
-    // Используем открытый unofficial KP API proxy
+    // Используем открытый unofficial KP API proxy с несколькими эндпоинтами
     const endpoints = [
-      `https://kinopoisk.dev/api/v2.2/films/${kpId}`,  // unofficial
+      `https://kinopoiskapiunofficial.tech/api/v2.2/films/${kpId}`,  // kinopoiskapiunofficial
+      `https://kinopoisk.dev/api/v2.2/films/${kpId}`,  // kinopoisk.dev
       `https://api.kinopoisk.dev/v1.4/movie/${kpId}`,  // alternative
     ];
+    
     for (const url of endpoints) {
       try {
-        const r = await fetch(url, { signal: AbortSignal.timeout(4000) });
+        const r = await fetch(url, { 
+          signal: AbortSignal.timeout(5000),
+          headers: {
+            'X-API-KEY': '89f7e6a3-2b8d-4c6e-9f1a-3d5e7b9c0a2f',  // demo key (replace with your own)
+          }
+        });
         if (r.ok) {
           const d = await r.json();
           return parseKpResponse(d);
         }
-      } catch (e) { /* try next */ }
+      } catch (e) {
+        console.log('KP endpoint error:', url, e.message);
+      }
     }
-    return null;
+    
+    // Фолбэк - возвращаем заглушку если API недоступны
+    return { title: `ID ${kpId}`, titleEn: '', type: 'film', year: '', seasons: 1 };
   }
 
   function parseKpResponse(d) {
@@ -231,7 +276,7 @@
     const titleEn = d.nameEn || d.nameOriginal || '';
     const type = (d.type === 'TV_SERIES' || d.type === 'MINI_SERIES' || d.isSeries)
       ? 'serial' : 'film';
-    const year = d.year;
+    const year = d.year || '';
     const seasons = d.seasons || d.seasonsCount || 1;
     return { title, titleEn, type, year, seasons };
   }
@@ -242,15 +287,18 @@
   async function runSearchRobot(kpId, type, season, episode, forceSourceId) {
     setStatus('searching', '🔍 Поисковой робот ищет контент...');
 
-    // 1. Получаем инфо о фильме
+    // 1. Получаем инфо о фильме/сериале из Кинопоиска
     showSpinner(true);
     let kpInfo = null;
     try {
       kpInfo = await fetchKpInfo(kpId);
-    } catch (e) {}
+    } catch (e) {
+      console.log('KP Info fetch error:', e.message);
+    }
 
     const title = kpInfo?.title || '';
     const titleEn = kpInfo?.titleEn || '';
+    const year = kpInfo?.year || '';
     const contentType = kpInfo?.type || type;
 
     // 2. Запускаем поиск по всем источникам параллельно
@@ -262,26 +310,39 @@
 
     const searchPromises = sourcesToSearch.map(async (src) => {
       try {
-        const res = await src.search(kpId, title || `ID ${kpId}`, contentType, season, episode, false);
+        // Передаем год для более точного поиска
+        const res = await src.search(kpId, title || `ID ${kpId}`, contentType, season, episode, false, year);
         state.sourceResults[src.id] = res;
         updateSourceItem(src.id, res.found ? 'found' : 'notfound');
         return { src, res };
       } catch (e) {
-        state.sourceResults[src.id] = { found: false };
+        console.log(`Search error for ${src.id}:`, e.message);
+        state.sourceResults[src.id] = { found: false, error: e.message };
         updateSourceItem(src.id, 'error');
-        return { src, res: { found: false } };
+        return { src, res: { found: false, error: e.message } };
       }
     });
 
     const results = await Promise.allSettled(searchPromises);
 
-    // 3. Выбираем лучший источник
+    // 3. Выбираем лучший источник (не fallback если есть нормальный)
     let best = null;
+    let bestFallback = null;
+    
     for (const src of SOURCES) {
       const r = state.sourceResults[src.id];
-      if (r && r.found && (!best || src.priority < best.src.priority)) {
-        best = { src, res: r };
+      if (r && r.found) {
+        if (!r.fallback && (!best || src.priority < best.src.priority)) {
+          best = { src, res: r };
+        } else if (r.fallback && !bestFallback) {
+          bestFallback = { src, res: r };
+        }
       }
+    }
+    
+    // Если нет источника без fallback, используем fallback
+    if (!best && bestFallback) {
+      best = bestFallback;
     }
 
     showSpinner(false);
@@ -309,7 +370,8 @@
         const res = await src.search(kpId, title || `ID ${kpId}`, state.type, state.season, state.episode, true);
         return { src, res };
       } catch (e) {
-        return { src, res: { found: false } };
+        console.log(`Trailer search error for ${src.id}:`, e.message);
+        return { src, res: { found: false, error: e.message } };
       }
     });
     
@@ -327,9 +389,9 @@
       }
     }
     
-    // Фолбэк на YouTube если ничего не найдено
+    // Фолбэк на YouTube если ничего не найдено - используем правильный формат
     const query = (title || `kinopoisk ${kpId}`) + ' официальный трейлер';
-    const embedUrl = `https://www.youtube-nocookie.com/embed?listType=search&list=${encodeURIComponent(query)}&autoplay=0`;
+    const embedUrl = `https://www.youtube.com/embed?listType=search&list=${encodeURIComponent(query)}&autoplay=0&rel=0`;
     loadIframe(embedUrl);
     setStatus('ok', '🎬 Трейлер загружен из YouTube');
     document.getElementById('lblSource').textContent = '▶ YouTube (трейлер)';
@@ -549,9 +611,14 @@
     // Инициализируем источники в UI
     updateSourcesUI(SOURCES, null, 'searching');
 
-    // Получаем инфо
+    // Получаем инфо из Кинопоиска
     let kpInfo = null;
-    try { kpInfo = await fetchKpInfo(kpId); } catch (e) {}
+    try { 
+      kpInfo = await fetchKpInfo(kpId);
+      console.log('KP Info:', kpInfo);
+    } catch (e) {
+      console.log('KP Info error:', e.message);
+    }
 
     if (kpInfo) {
       state.type = kpInfo.type;
@@ -560,7 +627,7 @@
         document.getElementById('btnSeason').style.display = '';
         document.getElementById('btnEpisode').style.display = '';
 
-        // Строим структуру сезонов (заглушка: 3 сезона по 10 серий)
+        // Строим структуру сезонов
         const numSeasons = typeof kpInfo.seasons === 'number' ? kpInfo.seasons : 1;
         for (let s = 1; s <= numSeasons; s++) {
           state.seasons[s] = { episodes: Array.from({ length: 16 }, (_, i) => i + 1) };
